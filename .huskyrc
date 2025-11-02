@@ -1,0 +1,6 @@
+{
+  "hooks": {
+    "pre-commit": "zsh repo-scripts/check-no-double-underscore.zsh",
+    "pre-push": ""
+  }
+}

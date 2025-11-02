@@ -1,0 +1,17 @@
+# OSA (Open Source Automation) - Default Runtime Configuration
+# This file defines the default runtime versions for development
+# Users can override these per-project by creating their own .mise.toml
+
+[tools]
+# Uncomment and adjust versions as needed:
+# node = "22"           # Node.js LTS
+python = "3.13"
+ruby = "3.4.0"
+java = "zulu-17"
+go = "1.23"
+rust = "stable"
+
+[env]
+# Environment variables for mise
+_.file = ".env"
+_.path = "./bin"

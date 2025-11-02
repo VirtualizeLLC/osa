@@ -1,0 +1,54 @@
+{
+  "version": "1.0",
+  "description": "Web development configuration - frontend, Node.js, build tools",
+  "profile": "web",
+  "components": {
+    "symlinks": true,
+    "oh_my_zsh": true,
+    "zsh_plugins": true,
+    "homebrew": true,
+    "mise": true,
+    "osa_snippets": true,
+    "android": false,
+    "iterm2": true,
+    "vscode": true
+  },
+  "runtimes": {
+    "node": {
+      "enabled": true,
+      "version": "22"
+    },
+    "python": {
+      "enabled": true,
+      "version": "3.13"
+    },
+    "ruby": {
+      "enabled": false,
+      "version": "3.4.0"
+    },
+    "java": {
+      "enabled": false,
+      "version": "openjdk-21"
+    },
+    "rust": {
+      "enabled": true,
+      "version": "stable"
+    },
+    "go": {
+      "enabled": false,
+      "version": "1.23"
+    },
+    "deno": {
+      "enabled": true,
+      "version": "latest"
+    },
+    "elixir": {
+      "enabled": false,
+      "version": "latest"
+    },
+    "erlang": {
+      "enabled": false,
+      "version": "latest"
+    }
+  }
+}

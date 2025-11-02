@@ -1,0 +1,121 @@
+#!/usr/bin/env zsh
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# OSA SAFE CONSTRUCTOR TEMPLATE - Machine/User-Specific Configuration
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#
+# Copy this file to: src/zsh/constructors/init.zsh
+# (init.zsh is gitignored and will not be committed)
+#
+# This file loads BEFORE platform-specific and plugin configuration.
+# Use it for machine-specific settings that should not be shared.
+#
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 🔒 SECURE CREDENTIAL MANAGEMENT
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# ❌ NEVER DO THIS - Hardcoded secrets will leak into git history:
+# export GITHUB_TOKEN="ghp_abc123def456..."
+# export NPM_TOKEN="npm_xyz789..."
+# export AWS_SECRET_ACCESS_KEY="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+
+# ✅ DO THIS INSTEAD - Use OSA's secure credential store:
+#
+# FIRST TIME SETUP (run once per machine):
+#   osa-secrets
+#     Service: github
+#     Username: your-username
+#     Secret: ghp_abc123def456...
+#
+# Then retrieve it safely in this file:
+export GITHUB_TOKEN="$(osa-secret-get github your-username)"
+export NPM_TOKEN="$(osa-secret-get npm your-username)"
+export HOMEBREW_GITHUB_API_TOKEN="$(osa-secret-get homebrew your-username)"
+
+# Alternatively, use the imperative API:
+# osa_secret_set "service-name" "account" "secret-value"
+# export MY_TOKEN="$(osa_secret_get service-name account)"
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 💻 MACHINE-SPECIFIC PATHS & ALIASES
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Custom project directories
+export WORK_DIR="$HOME/work/my-company"
+export PERSONAL_DIR="$HOME/dev/personal"
+export DOTFILES="$HOME/.dotfiles"
+
+# Quick navigation aliases
+alias work="cd $WORK_DIR"
+alias personal="cd $PERSONAL_DIR"
+alias dotfiles="cd $DOTFILES"
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 🛠️  CUSTOM FUNCTIONS
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Example: Deploy function with secure token retrieval
+deploy_to_prod() {
+  local deploy_token=$(osa-secret-get deployment prod-deploy-key)
+  if [[ -z "$deploy_token" ]]; then
+    echo "❌ Deployment token not found. Run: osa-secrets"
+    return 1
+  fi
+  
+  curl -H "Authorization: Bearer $deploy_token" \
+       -X POST https://api.example.com/deploy
+}
+
+# Example: Clone repo with secure SSH key
+clone_work_repo() {
+  local repo_name="$1"
+  if [[ -z "$repo_name" ]]; then
+    echo "Usage: clone_work_repo <repo-name>"
+    return 1
+  fi
+  
+  # SSH key is stored in keychain automatically
+  git clone git@github.com:company/$repo_name.git "$WORK_DIR/$repo_name"
+}
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 🔧 MACHINE-SPECIFIC OVERRIDES
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Override default Node version for this machine
+# export NODE_VERSION="20.10.0"
+
+# Custom Java home for this machine
+# export JAVA_HOME="/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home"
+
+# Android SDK (required if OSA_SETUP_ANDROID is enabled)
+# export ANDROID_HOME="$HOME/Library/Android/sdk"
+# export PATH="$ANDROID_HOME/emulator:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools:$PATH"
+
+# Machine-specific PATH additions (use with caution)
+# export PATH="$HOME/.local/bin:$PATH"
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 📝 NOTES
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#
+# SECURITY BEST PRACTICES:
+#   • Store ALL secrets using osa-secrets (Keychain/GNOME Keyring/pass)
+#   • Never commit init.zsh or final.zsh files (they're gitignored)
+#   • Run: ./scripts/check-secrets.zsh before committing
+#   • Run: ./osa-cli.zsh --scan-secrets to audit existing files
+#
+# WHERE SECRETS ARE STORED:
+#   • macOS:  Keychain.app (secure, encrypted, backed up)
+#   • Linux:  GNOME Keyring or pass (CLI password manager)
+#   • Other:  GPG-encrypted files in ~/.osa-secrets/
+#
+# LOADING ORDER:
+#   1. base.zsh (this loads secrets.zsh helper)
+#   2. init.zsh (THIS FILE - your machine-specific setup)
+#   3. platform-mac.zsh or platform-wsl.zsh
+#   4. plugins/*.zsh
+#   5. final.zsh (your final overrides)
+#
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
