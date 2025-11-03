@@ -180,7 +180,7 @@ create_test_symlink() {
 # Create test config file
 create_test_config() {
   local config_content="$1"
-  local config_path="${2:-$MOCK_HOME/.osaconfig}"
+  local config_path="${2:-$MOCK_HOME/.osa-config}"
   
   mkdir -p "$(dirname "$config_path")"
   echo "$config_content" > "$config_path"

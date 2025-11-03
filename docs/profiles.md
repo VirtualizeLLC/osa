@@ -40,7 +40,7 @@ This loads snippets from both `web/` and `backend/` directories.
 ## How Profiles Work
 
 1. **Specified in config** → User selects profile during setup or in JSON config
-2. **Saved to ~/.osaconfig** → `OSA_PROFILE="web,backend"`
+2. **Saved to ~/.osa-config** → `OSA_PROFILE="web,backend"`
 3. **osa-snippets reads it** → Only sources snippets from those profile directories
 4. **Snippets loaded at shell init** → User gets only relevant aliases and functions
 
@@ -126,13 +126,13 @@ Then run:
 Check what profile is set:
 
 ```bash
-grep OSA_PROFILE ~/.osaconfig
+grep OSA_PROFILE ~/.osa-config
 # Output: OSA_PROFILE="web,backend"
 ```
 
 ## Changing Profile Later
 
-Edit `~/.osaconfig` and update the `OSA_PROFILE` line:
+Edit `~/.osa-config` and update the `OSA_PROFILE` line:
 
 ```bash
 # Before
@@ -144,7 +144,7 @@ OSA_PROFILE="web,backend"
 
 Then restart your shell or run:
 ```bash
-source ~/.osaconfig
+source ~/.osa-config
 ```
 
 ## What Gets Loaded
@@ -172,7 +172,7 @@ Users don't load snippets they don't need, keeping shells lean and fast.
 ## FAQ
 
 **Q: Can I change my profile later?**
-A: Yes, edit `~/.osaconfig` and restart your shell.
+A: Yes, edit `~/.osa-config` and restart your shell.
 
 **Q: What if I select a profile I don't need?**
 A: Extra snippets won't hurt, but you'll have unnecessary aliases. Change to a profile that matches your work.

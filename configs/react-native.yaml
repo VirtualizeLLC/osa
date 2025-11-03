@@ -1,0 +1,71 @@
+version: "1.0"
+description: "React Native Development Setup - Mobile app development for iOS and Android"
+profile: react-native
+
+components:
+  # Required setup components
+  symlinks: true
+  oh_my_zsh: true
+  zsh_plugins: true
+  osa_snippets: true
+  
+  # Recommended setup components
+  homebrew: true
+  mise: true
+  git: true
+  cocoapods: true  # Required for React Native iOS
+  
+  # Snippets runtime flags
+  android: true  # React Native Android support
+  react_native: true  # React Native specific tools
+  node: false
+  python: false
+  ruby: true  # CocoaPods requires Ruby
+  java: true  # Android development requires Java
+  nvm: false
+  fnm: false
+  vscode: true
+  direnv: false
+  keychain: true  # Mobile development security
+  ngrok: false
+  mac_tools: true  # macOS tools for React Native
+  xcode: true  # Xcode tools for iOS part
+  egpu: false
+  compression: true
+
+runtimes:
+  node:
+    enabled: true
+    version: "22"
+  python:
+    enabled: true
+    version: "3.13"
+  ruby:
+    enabled: true
+    version: "3.4.0"
+  java:
+    enabled: true
+    version: "openjdk-21"
+  rust:
+    enabled: false
+    version: "stable"
+  go:
+    enabled: false
+    version: "1.23"
+  deno:
+    enabled: false
+    version: "latest"
+  elixir:
+    enabled: false
+    version: "latest"
+  erlang:
+    enabled: false
+    version: "latest"
+
+snippets:
+  osasnippets:
+    enabled: true
+    features:
+      - keychain
+      - xcode
+      - react_native

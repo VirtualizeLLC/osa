@@ -6,10 +6,11 @@
 # Uncomment and adjust versions as needed:
 # node = "22"           # Node.js LTS
 python = "3.13"
-ruby = "3.4.0"
+ruby = "3.2.2"
 java = "zulu-17"
 go = "1.23"
 rust = "stable"
+direnv = "2.37.1"
 
 [env]
 # Environment variables for mise

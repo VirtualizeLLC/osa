@@ -1,0 +1,70 @@
+version: "1.0"
+description: "iOS Development Setup - iOS app development with Xcode and CocoaPods"
+profile: ios
+
+components:
+  # Required setup components
+  symlinks: true
+  oh_my_zsh: true
+  zsh_plugins: true
+  osa_snippets: true
+  
+  # Recommended setup components
+  homebrew: true
+  mise: true
+  git: true
+  cocoapods: true  # Required for iOS development
+  
+  # Snippets runtime flags
+  android: false
+  react_native: false
+  node: false
+  python: false
+  ruby: true  # CocoaPods requires Ruby
+  java: false
+  nvm: false
+  fnm: false
+  vscode: true
+  direnv: false
+  keychain: true  # iOS development security
+  ngrok: false
+  mac_tools: true  # macOS tools for iOS dev
+  xcode: true  # Xcode tools required
+  egpu: false
+  compression: true
+
+runtimes:
+  node:
+    enabled: true
+    version: "22"
+  python:
+    enabled: true
+    version: "3.13"
+  ruby:
+    enabled: true
+    version: "3.4.0"
+  java:
+    enabled: false
+    version: "openjdk-21"
+  rust:
+    enabled: false
+    version: "stable"
+  go:
+    enabled: false
+    version: "1.23"
+  deno:
+    enabled: false
+    version: "latest"
+  elixir:
+    enabled: false
+    version: "latest"
+  erlang:
+    enabled: false
+    version: "latest"
+
+snippets:
+  osasnippets:
+    enabled: true
+    features:
+      - keychain
+      - xcode

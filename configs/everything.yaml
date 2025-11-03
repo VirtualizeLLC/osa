@@ -1,0 +1,71 @@
+version: "1.0"
+description: "Everything Setup - Comprehensive setup with all tools and runtimes"
+profile: everything
+
+components:
+  # Required setup components
+  symlinks: true
+  oh_my_zsh: true
+  zsh_plugins: true
+  osa_snippets: true
+  
+  # All optional setup components enabled
+  homebrew: true
+  mise: true
+  git: true
+  cocoapods: true  # iOS and React Native
+  
+  # All snippets runtime flags enabled
+  android: true
+  react_native: true
+  node: true
+  python: false
+  vscode: true
+  direnv: true
+  keychain: true
+  ngrok: true
+  mac_tools: true
+  xcode: true
+  egpu: true
+  compression: true
+
+runtimes:
+  node:
+    enabled: true
+    version: "22"
+  python:
+    enabled: true
+    version: "3.13"
+  ruby:
+    enabled: true
+    version: "3.4.0"
+  java:
+    enabled: true
+    version: "openjdk-21"
+  rust:
+    enabled: true
+    version: "stable"
+  go:
+    enabled: true
+    version: "1.23"
+  deno:
+    enabled: true
+    version: "latest"
+  elixir:
+    enabled: true
+    version: "latest"
+  erlang:
+    enabled: true
+    version: "latest"
+
+snippets:
+  osasnippets:
+    enabled: true
+    features:
+      - keychain
+      - xcode
+      - react_native
+      - android
+      - mac_tools
+      - direnv
+      - vscode

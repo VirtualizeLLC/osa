@@ -1,0 +1,69 @@
+version: "1.0"
+description: "Backend/polyglot development setup (Node, Python, Ruby, Java, Go, Rust)"
+profile: backend
+
+components:
+  # Required setup components
+  symlinks: true
+  oh_my_zsh: true
+  zsh_plugins: true
+  osa_snippets: true
+  
+  # Recommended setup components
+  homebrew: true
+  mise: true
+  git: true
+  cocoapods: false
+  
+  # Snippets runtime flags
+  android: false
+  react_native: false
+  node: false
+  python: false
+  ruby: false
+  java: false
+  nvm: false
+  fnm: false
+  vscode: true
+  direnv: true  # Automatic environment switching
+  keychain: false
+  ngrok: false
+  mac_tools: false
+  xcode: false
+  egpu: false
+  compression: true  # pbzip2 for faster compression
+
+runtimes:
+  node:
+    enabled: true
+    version: "22"
+  python:
+    enabled: true
+    version: "3.13"
+  ruby:
+    enabled: true
+    version: "3.4.0"
+  java:
+    enabled: true
+    version: "openjdk-21"
+  rust:
+    enabled: true
+    version: "stable"
+  go:
+    enabled: true
+    version: "1.23"
+  deno:
+    enabled: false
+    version: "latest"
+  elixir:
+    enabled: true
+    version: "latest"
+  erlang:
+    enabled: true
+    version: "latest"
+
+snippets:
+  osasnippets:
+    enabled: true
+    features:
+      - direnv

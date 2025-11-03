@@ -1,0 +1,68 @@
+version: "1.0"
+description: "Example OSA configuration - customize and save to use with './osa-cli.zsh --config <file>'"
+profile: example
+
+components:
+  # Required setup components
+  symlinks: true
+  oh_my_zsh: true
+  zsh_plugins: true
+  osa_snippets: true
+  
+  # Recommended setup components
+  homebrew: true
+  mise: true
+  git: true
+  cocoapods: false
+  
+  # Snippets runtime flags
+  android: false
+  react_native: false
+  node: false
+  python: false
+  ruby: false
+  java: false
+  nvm: false
+  fnm: false
+  vscode: true
+  direnv: false
+  keychain: false
+  ngrok: false
+  mac_tools: false
+  xcode: false
+  egpu: false
+  compression: false
+
+runtimes:
+  node:
+    enabled: true
+    version: "22"
+  python:
+    enabled: true
+    version: "3.13"
+  ruby:
+    enabled: false
+    version: "3.4.0"
+  java:
+    enabled: false
+    version: "openjdk-21"
+  rust:
+    enabled: false
+    version: "stable"
+  go:
+    enabled: false
+    version: "1.23"
+  deno:
+    enabled: false
+    version: "latest"
+  elixir:
+    enabled: false
+    version: "latest"
+  erlang:
+    enabled: false
+    version: "latest"
+
+snippets:
+  osasnippets:
+    enabled: true
+    features: []

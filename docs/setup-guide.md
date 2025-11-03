@@ -69,11 +69,9 @@ The new interactive setup asks you exactly what you need:
    - Ruby? (Choose: 3.2.0, 3.3.0, 3.4.0)
    - Java? (Choose: openjdk-11, openjdk-17, openjdk-21)
    - Rust? (Yes/No - uses stable)
-   - Go? (Choose: 1.21, 1.22, 1.23)
-4. 🚀 Saves your choices to `~/.osaconfig` and `.mise.toml`
-5. ⚡ Installs everything automatically
-
-**After setup:**
+    - Go? (Choose: 1.21, 1.22, 1.23)
+4. 🚀 Saves your choices to `~/.osa-config` and `.mise.toml`
+5. ⚡ Installs everything automatically**After setup:**
 ```bash
 source ~/.zshrc        # Reload shell
 mise list              # See installed versions
@@ -208,7 +206,7 @@ If you were using individual managers, you can now use mise instead:
 
 ## Configuration File
 
-Your choices are saved to `~/.osaconfig`. Example:
+Your choices are saved to `~/.osa-config`. Example:
 
 ```bash
 # OSA Configuration
@@ -272,7 +270,7 @@ To start fresh:
 
 ```bash
 # Backup your current config
-cp ~/.osaconfig ~/.osaconfig.backup
+cp ~/.osa-config ~/.osa-config.backup
 
 # Remove symlinks
 rm -f ~/.osa ~/.zshrc
@@ -339,7 +337,7 @@ View your platform info:
 
 If you were using OSA before this update:
 
-1. **Your existing .osaconfig will be respected** - the new CLI reads your saved preferences
+1. **Your existing .osa-config will be respected** - the new CLI reads your saved preferences
 2. **No need to reinstall everything** - run `./osa-cli.zsh --auto` to use your existing config
 3. **New components available** - run `./osa-cli.zsh --list` to see what's new
 

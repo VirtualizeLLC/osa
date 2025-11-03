@@ -2,6 +2,20 @@
 
 JSON configuration files allow you to automate the setup process without interactive prompts. Download a preset or customize one for your needs.
 
+## Quick Reference
+
+| What You Want | Command |
+|---------------|---------|
+| **Interactive setup** (choose components) | `./osa-cli.zsh --interactive` |
+| **Fast setup** (shell + mise) | `./osa-cli.zsh --minimal` |
+| **Use a preset config** (e.g., React Native) | `./osa-cli.zsh --config react-native` |
+| **Preview before installing** | `./osa-cli.zsh --config web --dry-run` |
+| **Download team config from URL** | `./osa-cli.zsh --config-url https://...` |
+| **List available presets** | `./osa-cli.zsh --list-configs` |
+| **See all CLI options** | `./osa-cli.zsh --help` |
+| **Install everything** | `./osa-cli.zsh --all` |
+| **Reproduce saved setup** | `./osa-cli.zsh --auto` |
+
 ## Quick Start
 
 ```bash
@@ -26,47 +40,80 @@ cp configs/example-config.json my-setup.json
 
 ## Available Presets
 
+### `minimal.json`
+Shell-only setup (no development tools):
+- **Components**: Only required items (symlinks, oh-my-zsh, zsh-plugins, osa-snippets)
+- **Runtimes**: None
+- **Best for**: System administrators, lightweight setups, servers
+
+```bash
+./osa-cli.zsh --config-file configs/minimal.json
+```
+
 ### `example-config.json`
-The default/minimal setup. Install symlinks, oh-my-zsh, Node.js 22, and nothing else.
+Basic web development setup:
+- **Components**: Core + homebrew, mise, git, VSCode
+- **Runtimes**: Node.js 22 only
+- **Best for**: Getting started, simple web projects, customization template
 
 ```bash
 ./osa-cli.zsh --config-file configs/example-config.json
 ```
 
-### `frontend-dev.json`
+### `web.json`
 Complete frontend web developer environment:
-- **Components**: Symlinks, oh-my-zsh, zsh-plugins, homebrew, mise, git, iTerm2, VSCode
-- **Runtimes**: Node.js 22, Python 3.13, Deno latest
+- **Components**: Core + homebrew, mise, git, vscode, direnv, compression
+- **Runtimes**: Node.js 22, Python 3.13, Rust stable, Deno latest
 - **Best for**: React, Vue, Next.js, Svelte, web development
 
 ```bash
-./osa-cli.zsh --config-file configs/frontend-dev.json
+./osa-cli.zsh --config-file configs/web.json
 ```
 
-### `backend-dev.json`
+### `backend.json`
 Complete backend/polyglot environment:
-- **Components**: Symlinks, oh-my-zsh, zsh-plugins, homebrew, mise, git, iTerm2, VSCode
+- **Components**: Core + homebrew, mise, git, vscode, direnv, compression
 - **Runtimes**: Node.js 22, Python 3.13, Ruby 3.4.0, Java OpenJDK 21, Rust stable, Go 1.23, Elixir, Erlang
 - **Best for**: Full-stack, microservices, API development, polyglot developers
 
 ```bash
-./osa-cli.zsh --config-file configs/backend-dev.json
+./osa-cli.zsh --config-file configs/backend.json
 ```
 
 ### `macos.json`
 General macOS development environment (no mobile platforms):
-- **Components**: Symlinks, oh-my-zsh, zsh-plugins, homebrew, mise, git, iTerm2, VSCode
+- **Components**: Core + homebrew, mise, git, vscode, direnv, keychain, mac-tools, compression
 - **Runtimes**: Node.js 22, Python 3.13, Ruby 3.4.0, Java OpenJDK 21, Go 1.23
-- **Best for**: macOS-only development, avoiding iOS/CocoaPods, web/backend development
+- **Best for**: macOS-only development, avoiding iOS/CocoaPods, general development
 
 ```bash
 ./osa-cli.zsh --config-file configs/macos.json
 ```
 
+### `android.json`
+Android development setup:
+- **Components**: Core + homebrew, mise, git, vscode + android tools
+- **Runtimes**: Node.js 22, Python 3.13, Ruby 3.4.0, Java OpenJDK 17 (required for Android)
+- **Best for**: Android app development, React Native (Android only)
+
+```bash
+./osa-cli.zsh --config-file configs/android.json
+```
+
+### `ios.json`
+iOS development setup:
+- **Components**: Core + homebrew, mise, git, vscode + cocoapods, xcode, keychain
+- **Runtimes**: Node.js 22, Python 3.13, Ruby 3.4.0 (required for CocoaPods)
+- **Best for**: iOS app development, React Native (iOS only)
+
+```bash
+./osa-cli.zsh --config-file configs/ios.json
+```
+
 ### `react-native.json` ⭐
-Complete React Native mobile development environment:
-- **Components**: All (symlinks, oh-my-zsh, zsh-plugins, homebrew, mise, git, iTerm2, VSCode, CocoaPods, Android tools)
-- **Runtimes**: Node.js 22, Ruby 3.4.0 (for CocoaPods), Java OpenJDK 21 (for Android), Python 3.13
+Complete React Native mobile development environment (iOS and Android):
+- **Components**: All + android tools, cocoapods, xcode, keychain
+- **Runtimes**: Node.js 22, Python 3.13, Ruby 3.4.0, Java OpenJDK 17
 - **Best for**: iOS and Android mobile app development with React Native
 
 ```bash
@@ -75,22 +122,12 @@ Complete React Native mobile development environment:
 
 ### `everything.json` ⭐
 Install absolutely everything OSA supports:
-- **Components**: All available components
+- **Components**: All available components and snippets flags
 - **Runtimes**: All runtimes (Node, Python, Ruby, Java, Rust, Go, Deno, Elixir, Erlang)
 - **Best for**: Maximum compatibility, experimentation, kitchen sink setups
 
 ```bash
 ./osa-cli.zsh --config-file configs/everything.json
-```
-
-### `minimal.json`
-Shell-only setup (no development tools):
-- **Components**: Only required items (symlinks, oh-my-zsh, zsh-plugins)
-- **Runtimes**: None
-- **Best for**: System administrators, lightweight setups, servers
-
-```bash
-./osa-cli.zsh --config-file configs/minimal.json
 ```
 
 ## Configuration Schema
@@ -101,14 +138,17 @@ Each JSON config file has this structure:
 {
   "version": "1.0",
   "description": "Your setup description",
+  "profile": "web",
   "components": {
     "symlinks": true,
     "oh_my_zsh": true,
     "zsh_plugins": true,
     "homebrew": true,
     "mise": true,
-    "iterm2": false,
-    "vscode": false
+    "osa_snippets": true,
+    "git": true,
+    "vscode": false,
+    "cocoapods": false
   },
   "runtimes": {
     "node": { "enabled": true, "version": "22" },
@@ -123,6 +163,34 @@ Each JSON config file has this structure:
   }
 }
 ```
+
+### Components Section
+
+The `components` object controls:
+1. **Setup components** (install scripts during `./osa-cli.zsh --config-file`):
+   - `symlinks` - Create ~/.osa symlinks
+   - `oh_my_zsh` - Install Oh My Zsh framework
+   - `zsh_plugins` - Install zsh plugins (syntax highlighting, evalcache, etc)
+   - `homebrew` - Install Homebrew (macOS only)
+   - `mise` - Install mise runtime manager
+   - `osa_snippets` - Download osa-snippets community helpers
+   - `git` - Configure Git settings
+   - `cocoapods` - Install CocoaPods (iOS development, macOS only)
+
+2. **Snippets runtime flags** (control what loads from entry.zsh at shell startup):
+   - `android` - Android development aliases and tools
+   - `react_native` - React Native utilities
+   - `vscode` - VS Code integration
+   - `direnv` - Direnv environment switching
+   - `keychain` - Keychain utilities
+   - `ngrok` - Ngrok tunneling
+   - `mac_tools` - macOS utilities (browsers, deletion commands)
+   - `xcode` - Xcode command-line utilities
+   - `egpu` - eGPU management
+   - `compression` - Compression utilities
+   - And version manager flags: `node`, `python`, `ruby`, `java`, `nvm`, `fnm`
+
+All flags are saved to `~/.osa-config` and exported to the shell environment, making them available when entry.zsh sources snippets at shell startup.
 
 ## Creating a Custom Config
 
@@ -165,19 +233,32 @@ Each JSON config file has this structure:
 
 ## Component Reference
 
-| Component | Description | Platforms | Notes |
-|-----------|-------------|-----------|-------|
-| `symlinks` | Setup OSA repo symlinks | macOS, Linux, WSL | **Required** |
-| `oh_my_zsh` | Install oh-my-zsh | macOS, Linux, WSL | **Required** |
-| `zsh_plugins` | Install zsh plugins | macOS, Linux, WSL | **Required** |
-| `homebrew` | Install Homebrew package manager | macOS, Linux, WSL | Recommended |
-| `mise` | Install mise (polyglot runtime manager) | macOS, Linux, WSL | Recommended |
-| `osa_snippets` | Clone osa-snippets repo (community helpers) | macOS, Linux, WSL | Optional |
-| `git` | Configure Git | macOS, Linux, WSL | Recommended |
-| `android` | Enable Android development tools | macOS, Linux, WSL | Requires ANDROID_HOME |
-| `cocoapods` | Install CocoaPods for iOS | macOS | iOS development |
-| `iterm2` | Install iTerm2 terminal | macOS | Optional |
-| `vscode` | Install VSCode settings | macOS, Linux, WSL | Optional |
+| Component | Type | Description | Platforms | Notes |
+|-----------|------|-------------|-----------|-------|
+| `symlinks` | Setup | Create ~/.osa symlinks | macOS, Linux, WSL | **Required** |
+| `oh_my_zsh` | Setup | Install oh-my-zsh framework | macOS, Linux, WSL | **Required** |
+| `zsh_plugins` | Setup | Install zsh plugins (syntax highlighting, evalcache) | macOS, Linux, WSL | **Required** |
+| `osa_snippets` | Setup | Clone osa-snippets repo (community helpers) | macOS, Linux, WSL | **Required** |
+| `homebrew` | Setup | Install Homebrew package manager | macOS | Recommended |
+| `mise` | Setup | Install mise (polyglot runtime manager) | macOS, Linux, WSL | Recommended |
+| `git` | Setup | Configure Git settings | macOS, Linux, WSL | Recommended |
+| `cocoapods` | Setup | Install CocoaPods for iOS | macOS | Optional, iOS only |
+| `android` | Snippets | Android development aliases/tools | macOS, Linux, WSL | Optional |
+| `react_native` | Snippets | React Native utilities | macOS, Linux, WSL | Optional |
+| `vscode` | Snippets | VS Code integration | macOS, Linux, WSL | Optional |
+| `direnv` | Snippets | Direnv environment switching | macOS, Linux, WSL | Optional |
+| `keychain` | Snippets | Keychain utilities | macOS | Optional |
+| `ngrok` | Snippets | Ngrok tunneling | macOS, Linux, WSL | Optional |
+| `mac_tools` | Snippets | macOS utilities (browsers, deletion) | macOS | Optional |
+| `xcode` | Snippets | Xcode command-line utilities | macOS | Optional |
+| `egpu` | Snippets | eGPU management | macOS | Optional |
+| `compression` | Snippets | Compression utilities (pbzip2) | macOS, Linux, WSL | Optional |
+| `node` | Snippets | Node.js aliases (if not using mise) | macOS, Linux, WSL | Optional |
+| `python` | Snippets | Python aliases (if not using mise) | macOS, Linux, WSL | Optional |
+| `ruby` | Snippets | Ruby aliases (if not using mise) | macOS, Linux, WSL | Optional |
+| `java` | Snippets | Java aliases (if not using mise) | macOS, Linux, WSL | Optional |
+| `nvm` | Snippets | Node Version Manager support | macOS, Linux, WSL | Optional |
+| `fnm` | Snippets | Fast Node Manager support | macOS, Linux, WSL | Optional |
 
 ## Runtime Versions
 

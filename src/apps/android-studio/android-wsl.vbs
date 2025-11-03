@@ -1,2 +1,0 @@
-CreateObject("WScript.Shell").Run "%USERPROFILE%\AppData\Local\Android\Sdk\platform-tools\adb.exe kill-server", 0, True
-CreateObject("WScript.Shell").Run "%USERPROFILE%\AppData\Local\Android\Sdk\platform-tools\adb.exe -a -P 5037 nodaemon server", 0, True

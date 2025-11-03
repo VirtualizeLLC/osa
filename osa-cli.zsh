@@ -2,7 +2,7 @@
 # OSA (Open Source Automation) CLI
 # Interactive setup tool with platform detection and component opt-in
 
-# Get script directory (absolute path to repo root)
+# Get script directory (absolute path to directory)
 OSA_CLI_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # Export repo path for use in setup scripts
@@ -24,7 +24,7 @@ COLOR_RED=$'\033[0;31m'
 COLOR_CYAN=$'\033[0;36m'
 
 # Configuration file
-OSA_CONFIG_FILE="$HOME/.osaconfig"
+OSA_CONFIG_FILE="$HOME/.osa-config"
 
 # Verbose mode flag (export so scripts can use it)
 export OSA_VERBOSE=false
@@ -48,6 +48,86 @@ export OSA_SETUP_PROFILE="everything"
 # Replaces hyphens with underscores and converts to uppercase
 normalize_key() {
   echo "${1:gs/-/_/:u}"
+}
+
+# Flatten nested YAML structure into flat OSA_CONFIG_* environment variables
+# Examples:
+#   components.symlinks=true  →  OSA_CONFIG_COMPONENTS_SYMLINKS=true
+#   runtimes.node.version=22  →  OSA_CONFIG_RUNTIMES_NODE_VERSION=22
+#   snippets.osasnippets.enabled=true  →  OSA_CONFIG_SNIPPETS_OSASNIPPETS_ENABLED=true
+flatten_yaml_to_env_vars() {
+  local resolved_path="$1"
+  
+  if [[ ! -f "$resolved_path" ]]; then
+    echo -e "${COLOR_RED}✗${COLOR_RESET} Config file not found: $resolved_path"
+    return 1
+  fi
+  
+  # Parse profile name
+  local profile=$(yq eval '.profile' "$resolved_path" 2>/dev/null)
+  if [[ -z "$profile" ]]; then
+    echo -e "${COLOR_RED}✗${COLOR_RESET} Config missing 'profile' field"
+    return 1
+  fi
+  
+  typeset -gx "OSA_CONFIG_PROFILE=$profile"
+  
+  # Flatten components section - get ALL keys dynamically
+  local all_component_keys=$(yq eval '.components | keys | .[]' "$resolved_path" 2>/dev/null)
+  
+  while IFS= read -r key; do
+    [[ -z "$key" ]] && continue
+    local value=$(yq eval ".components.${key}" "$resolved_path" 2>/dev/null)
+    local var_name="OSA_CONFIG_COMPONENTS_$(echo $key | tr a-z A-Z | tr '-' '_')"
+    typeset -gx "$var_name=$value"
+  done <<< "$all_component_keys"
+  
+  # Flatten runtimes section
+  local -a runtime_keys=(node python ruby java rust go deno elixir erlang)
+  for runtime in "${runtime_keys[@]}"; do
+    local enabled=$(yq eval ".runtimes.${runtime}.enabled // false" "$resolved_path" 2>/dev/null)
+    local version=$(yq eval ".runtimes.${runtime}.version // \"latest\"" "$resolved_path" 2>/dev/null)
+    
+    local enabled_var="OSA_CONFIG_RUNTIMES_$(echo $runtime | tr a-z A-Z)_ENABLED"
+    local version_var="OSA_CONFIG_RUNTIMES_$(echo $runtime | tr a-z A-Z)_VERSION"
+    
+    typeset -gx "$enabled_var=$enabled"
+    typeset -gx "$version_var=$version"
+  done
+  
+  # Flatten snippets section
+  # Get list of snippet repo names
+  local snippet_repos=$(yq eval '.snippets | keys | .[]' "$resolved_path" 2>/dev/null)
+  
+  if [[ -n "$snippet_repos" ]]; then
+    while IFS= read -r repo; do
+      [[ -z "$repo" ]] && continue
+      
+      local repo_upper=$(echo "$repo" | tr a-z A-Z | tr '-' '_')
+      local enabled=$(yq eval ".snippets.${repo}.enabled" "$resolved_path" 2>/dev/null)
+      local enabled_var="OSA_CONFIG_SNIPPETS_${repo_upper}_ENABLED"
+      typeset -gx "$enabled_var=$enabled"
+      
+      # Get features array
+      local features=$(yq eval ".snippets.${repo}.features" "$resolved_path" 2>/dev/null)
+      
+      # If features is not a list/null, continue
+      if [[ "$features" == "null" || -z "$features" ]]; then
+        continue
+      fi
+      
+      # Parse each feature from the list
+      local feature_list=$(yq eval ".snippets.${repo}.features | .[]" "$resolved_path" 2>/dev/null)
+      while IFS= read -r feature; do
+        [[ -z "$feature" ]] && continue
+        local feature_upper=$(echo "$feature" | tr a-z A-Z | tr '-' '_')
+        local feature_var="OSA_CONFIG_SNIPPETS_${repo_upper}_${feature_upper}"
+        typeset -gx "$feature_var=true"
+      done <<< "$feature_list"
+    done <<< "$snippet_repos"
+  fi
+  
+  return 0
 }
 
 # Validate runtime version string (security: prevent command injection)
@@ -80,9 +160,9 @@ load_json_config() {
   
   # Auto-resolve config name to configs/ directory
   if [[ ! "$json_file" =~ "/" ]]; then
-    # No path separator - try configs/ directory with and without .json extension
-    if [[ -f "$OSA_CLI_DIR/configs/${json_file}.json" ]]; then
-      resolved_path="$OSA_CLI_DIR/configs/${json_file}.json"
+    # No path separator - try configs/ directory with and without .yaml extension
+    if [[ -f "$OSA_CLI_DIR/configs/${json_file}.yaml" ]]; then
+      resolved_path="$OSA_CLI_DIR/configs/${json_file}.yaml"
     elif [[ -f "$OSA_CLI_DIR/configs/$json_file" ]]; then
       resolved_path="$OSA_CLI_DIR/configs/$json_file"
     else
@@ -104,54 +184,49 @@ load_json_config() {
     return 1
   fi
   
-  # Check if jq is available
-  if ! command -v jq &> /dev/null; then
-    echo -e "${COLOR_RED}✗${COLOR_RESET} jq not found - required for JSON config parsing"
+  # Check if yq is available
+  if ! command -v yq &> /dev/null; then
+    echo -e "${COLOR_RED}✗${COLOR_RESET} yq not found - required for YAML config parsing"
     echo ""
     echo "Install with:"
     if [[ "$OSA_IS_MACOS" == "true" ]]; then
-      echo "  brew install jq"
+      echo "  brew install yq"
     else
-      echo "  apt-get install jq    (Ubuntu/Debian)"
-      echo "  yum install jq        (RHEL/CentOS)"
-      echo "  pacman -S jq          (Arch)"
+      echo "  apt-get install yq    (Ubuntu/Debian)"
+      echo "  yum install yq        (RHEL/CentOS)"
+      echo "  pacman -S yq          (Arch)"
     fi
     echo ""
-    echo "Or run './osa-cli.zsh --interactive' instead (no jq needed)"
+    echo "Or run './osa-cli.zsh --interactive' instead (no yq needed)"
     return 1
   fi
   
-  # Load components
+  # Flatten YAML to env vars (populates OSA_CONFIG_* variables)
+  if ! flatten_yaml_to_env_vars "$resolved_path"; then
+    return 1
+  fi
+  
+  # For backward compatibility during installation, also set OSA_SETUP_* variables
+  # These are used by run_component() to determine what to install
   local -a component_keys=(symlinks oh_my_zsh zsh_plugins homebrew mise osa_snippets git android iterm2 vscode cocoapods)
-  local -a undefined_components
   
   for key in "${component_keys[@]}"; do
-    local enabled=$(jq -r ".components.${key} // false" "$resolved_path" 2>/dev/null)
+    local enabled=$(yq eval ".components.${key} // false" "$resolved_path" 2>/dev/null)
     local var_name="OSA_SETUP_$(normalize_key "$key")"
     
     if [[ "$enabled" == "true" ]]; then
       typeset -g "$var_name=true"
     else
       typeset -g "$var_name=false"
-      # Track undefined components (not explicitly set in config)
-      local component_exists=$(jq -r ".components | has(\"${key}\")" "$resolved_path" 2>/dev/null)
-      if [[ "$component_exists" != "true" ]]; then
-        undefined_components+=("$key")
-      fi
     fi
   done
   
-  # Log undefined components that will be skipped (optional, can be removed if too verbose)
-  if [[ ${#undefined_components[@]} -gt 0 ]] && [[ "$OSA_VERBOSE" == "true" ]]; then
-    echo -e "${COLOR_CYAN}Skipping undefined components: ${undefined_components[*]}${COLOR_RESET}"
-  fi
-  
-  # Load runtimes
+  # Load runtimes into MISE_*_VERSION for runtime installation
   local -a runtime_keys=(node python ruby java rust go deno elixir erlang)
   
   for runtime in "${runtime_keys[@]}"; do
-    local enabled=$(jq -r ".runtimes.${runtime}.enabled // false" "$resolved_path" 2>/dev/null)
-    local version=$(jq -r ".runtimes.${runtime}.version // \"latest\"" "$resolved_path" 2>/dev/null)
+    local enabled=$(yq eval ".runtimes.${runtime}.enabled // false" "$resolved_path" 2>/dev/null)
+    local version=$(yq eval ".runtimes.${runtime}.version // \"latest\"" "$resolved_path" 2>/dev/null)
     
     if [[ "$enabled" == "true" ]]; then
       # Validate version string contains only safe characters
@@ -163,10 +238,6 @@ load_json_config() {
       typeset -g "$var_name=$version"
     fi
   done
-  
-  # Extract profile name from filename (e.g., "react-native.json" → "react-native")
-  local filename=$(basename "$resolved_path")
-  export OSA_SETUP_PROFILE="${filename%.json}"
   
   echo -e "${COLOR_GREEN}✓${COLOR_RESET} Configuration loaded from: $resolved_path"
   return 0
@@ -207,15 +278,15 @@ load_remote_config() {
     return 1
   fi
   
-  # Validate it's a JSON file
-  if ! command -v jq &> /dev/null; then
-    echo -e "${COLOR_RED}Error: jq is required to parse remote configs. Install with: brew install jq${COLOR_RESET}"
+  # Validate it's a YAML file
+  if ! command -v yq &> /dev/null; then
+    echo -e "${COLOR_RED}Error: yq is required to parse remote configs. Install with: brew install yq${COLOR_RESET}"
     rm -f "$temp_config"
     return 1
   fi
   
-  if ! jq empty "$temp_config" 2>/dev/null; then
-    echo -e "${COLOR_RED}Error: Downloaded file is not valid JSON${COLOR_RESET}"
+  if ! yq eval '.' "$temp_config" > /dev/null 2>&1; then
+    echo -e "${COLOR_RED}Error: Downloaded file is not valid YAML${COLOR_RESET}"
     rm -f "$temp_config"
     return 1
   fi
@@ -225,7 +296,7 @@ load_remote_config() {
   
   # Show preview of what will be installed
   echo -e "${COLOR_BOLD}Configuration Preview:${COLOR_RESET}"
-  local description=$(jq -r '.description // "No description"' "$temp_config" 2>/dev/null)
+  local description=$(yq eval '.description // "No description"' "$temp_config" 2>/dev/null)
   echo "  Description: $description"
   echo ""
   
@@ -270,7 +341,7 @@ register_component() {
 
 # Initialize components
 init_components() {
-  # Core components (REQUIRED)
+  # Core setup components (REQUIRED - have installation scripts)
   register_component "symlinks" "Create symlinks for zshrc and repo" "all" "src/setup/initialize-repo-symlinks.zsh"
   register_component "homebrew" "Install Homebrew package manager" "macos" "src/setup/install-brew.zsh"
   register_component "oh-my-zsh" "Install Oh My Zsh framework" "all" "src/setup/oh-my-zsh.zsh"
@@ -282,9 +353,8 @@ init_components() {
   # Community scripts and helpers
   register_component "osa-snippets" "Clone osa-snippets repo (community shell functions/helpers)" "all" "src/setup/install-osa-snippets.zsh"
   
-  # Development tools
-  register_component "git" "Configure Git" "all" "src/setup/git.zsh"
-  register_component "android" "Enable Android development tools (adb, emulator aliases)" "all" ""
+  # Development tools with install scripts
+  register_component "git" "Configure Git (version control)" "all" "src/setup/git.zsh"
   register_component "cocoapods" "Install CocoaPods for iOS development" "macos" "src/setup/install-cocoapods.zsh"
 }
 
@@ -306,26 +376,84 @@ is_component_available() {
 }
 
 # Load configuration from file
+# Sources ~/.osa-config which contains flattened OSA_CONFIG_* variables
 load_config() {
   if [[ -f "$OSA_CONFIG_FILE" ]]; then
-    source "$OSA_CONFIG_FILE"
+    # Source config file (contains flattened OSA_CONFIG_* variables)
+    source "$OSA_CONFIG_FILE" 2>/dev/null
     return 0
   fi
   return 1
 }
 
-# Save configuration to file
+# Save configuration to file in flattened format
 save_config() {
-  echo "# OSA Configuration" > "$OSA_CONFIG_FILE"
-  echo "# Generated on $(date)" >> "$OSA_CONFIG_FILE"
-  echo "# Profile: ${OSA_SETUP_PROFILE:-custom}" >> "$OSA_CONFIG_FILE"
-  echo "" >> "$OSA_CONFIG_FILE"
+  local temp_file="/tmp/osa-config-$$.tmp"
   
-  for key in "${(@k)SETUP_COMPONENTS}"; do
-    local var_name="OSA_SETUP_$(normalize_key "$key")"
-    local value="${(P)var_name}"
-    echo "${var_name}=${value:-false}" >> "$OSA_CONFIG_FILE"
-  done
+  {
+    echo "# OSA Configuration"
+    echo "# Generated on $(date)"
+    echo "# Profile: ${OSA_CONFIG_PROFILE:-${OSA_SETUP_PROFILE:-custom}}"
+    echo "#"
+    echo "# This file contains flattened configuration variables from YAML"
+    echo "# Format: OSA_CONFIG_<SECTION>_<KEY>=<VALUE>"
+    echo "#"
+    echo "# Component flags (setup components to install):"
+    echo "#   OSA_CONFIG_COMPONENTS_<NAME>=true|false"
+    echo "#"
+    echo "# Runtime versions (installed via mise):"
+    echo "#   OSA_CONFIG_RUNTIMES_<NAME>_ENABLED=true|false"
+    echo "#   OSA_CONFIG_RUNTIMES_<NAME>_VERSION=<version>"
+    echo "#"
+    echo "# Snippets features (loaded from snippet repos):"
+    echo "#   OSA_CONFIG_SNIPPETS_<REPO>_ENABLED=true|false"
+    echo "#   OSA_CONFIG_SNIPPETS_<REPO>_<FEATURE>=true"
+    echo "#"
+    echo ""
+    
+    # Export OSA_CONFIG_PROFILE
+    echo "OSA_CONFIG_PROFILE='${OSA_CONFIG_PROFILE:-${OSA_SETUP_PROFILE:-everything}}'"
+    echo ""
+    
+    # Export all OSA_CONFIG_* variables that were set during config loading
+    # Use a more robust method than compgen
+    local all_vars=(${(k)parameters})
+    for var in $all_vars; do
+      if [[ $var == OSA_CONFIG_* ]]; then
+        local value="${(P)var}"
+        # Escape single quotes in values
+        value="${value//\'/\'\\\'\'}"
+        echo "${var}='${value}'"
+      fi
+    done
+    
+    # If no OSA_CONFIG_* variables exist (interactive mode), convert OSA_SETUP_* to OSA_CONFIG_*
+    if [[ -z "$(echo $all_vars | grep '^OSA_CONFIG_')" ]]; then
+      # Convert OSA_SETUP_* component flags to OSA_CONFIG_COMPONENTS_*
+      local -a component_keys=(symlinks homebrew oh_my_zsh zsh_plugins mise osa_snippets git android iterm2 vscode cocoapods)
+      for key in "${component_keys[@]}"; do
+        local var_name="OSA_SETUP_$(echo $key | tr a-z A-Z | tr '-' '_')"
+        local value="${(P)var_name}"
+        local config_name="OSA_CONFIG_COMPONENTS_$(echo $key | tr a-z A-Z | tr '-' '_')"
+        echo "${config_name}='${value:-false}'"
+      done
+      
+      # Export runtimes (from OSA_SETUP_RUNTIME_* or OSA_SETUP_RUNTIMES_*)
+      local -a runtime_keys=(node python ruby java rust go deno elixir erlang)
+      for runtime in "${runtime_keys[@]}"; do
+        local enabled_var="OSA_SETUP_RUNTIME_$(echo $runtime | tr a-z A-Z)_ENABLED"
+        local version_var="OSA_SETUP_RUNTIME_$(echo $runtime | tr a-z A-Z)_VERSION"
+        local enabled="${(P)enabled_var}"
+        local version="${(P)version_var}"
+        
+        echo "OSA_CONFIG_RUNTIMES_$(echo $runtime | tr a-z A-Z)_ENABLED='${enabled:-false}'"
+        echo "OSA_CONFIG_RUNTIMES_$(echo $runtime | tr a-z A-Z)_VERSION='${version:-latest}'"
+      done
+    fi
+  } > "$temp_file"
+  
+  # Move temp file to final location
+  mv "$temp_file" "$OSA_CONFIG_FILE"
   
   echo -e "${COLOR_GREEN}✓${COLOR_RESET} Configuration saved to $OSA_CONFIG_FILE"
 }
@@ -499,6 +627,141 @@ select_runtimes_for_mise() {
   done
   
   echo ""
+}
+
+# Validate a configuration file for syntax errors and show what would be loaded
+validate_config() {
+  local config_path="$1"
+  
+  if [[ -z "$config_path" ]]; then
+    echo -e "${COLOR_RED}✗${COLOR_RESET} Config path required"
+    return 1
+  fi
+  
+  # Resolve config path
+  local resolved_path=""
+  if [[ ! "$config_path" =~ "/" ]]; then
+    # No path separator - try configs/ directory
+    if [[ -f "$OSA_CLI_DIR/configs/${config_path}.yaml" ]]; then
+      resolved_path="$OSA_CLI_DIR/configs/${config_path}.yaml"
+    elif [[ -f "$OSA_CLI_DIR/configs/$config_path" ]]; then
+      resolved_path="$OSA_CLI_DIR/configs/$config_path"
+    else
+      echo -e "${COLOR_RED}✗${COLOR_RESET} Config not found: $config_path"
+      echo -e "${COLOR_YELLOW}Available configs:${COLOR_RESET}"
+      list_configs 2>/dev/null | head -20
+      return 1
+    fi
+  elif [[ "$config_path" =~ ^/ ]]; then
+    resolved_path="$config_path"
+  else
+    resolved_path="$OSA_CLI_DIR/$config_path"
+  fi
+  
+  if [[ ! -f "$resolved_path" ]]; then
+    echo -e "${COLOR_RED}✗${COLOR_RESET} Config file not found: $resolved_path"
+    return 1
+  fi
+  
+  # Check if yq is available
+  if ! command -v yq &> /dev/null; then
+    echo -e "${COLOR_RED}✗${COLOR_RESET} yq not found - required to validate YAML config"
+    echo ""
+    echo "Install with:"
+    if [[ "$OSA_IS_MACOS" == "true" ]]; then
+      echo "  brew install yq"
+    else
+      echo "  apt-get install yq    (Ubuntu/Debian)"
+      echo "  yum install yq        (RHEL/CentOS)"
+      echo "  pacman -S yq          (Arch)"
+    fi
+    return 1
+  fi
+  
+  echo -e "${COLOR_BOLD}${COLOR_CYAN}▶ Validating configuration: $(basename "$resolved_path")${COLOR_RESET}"
+  echo ""
+  
+  # Test YAML syntax
+  if ! yq eval '.' "$resolved_path" > /dev/null 2>&1; then
+    echo -e "${COLOR_RED}✗ YAML syntax error:${COLOR_RESET}"
+    yq eval '.' "$resolved_path" 2>&1 | head -20
+    return 1
+  fi
+  
+  echo -e "${COLOR_GREEN}✓${COLOR_RESET} YAML syntax is valid"
+  echo ""
+  
+  # Show what will be loaded
+  echo -e "${COLOR_BOLD}Configuration Summary:${COLOR_RESET}"
+  echo ""
+  
+  local profile=$(yq eval '.profile' "$resolved_path" 2>/dev/null)
+  local description=$(yq eval '.description' "$resolved_path" 2>/dev/null)
+  echo "  Profile: ${COLOR_CYAN}${profile}${COLOR_RESET}"
+  echo "  Description: $description"
+  echo ""
+  
+  # Show enabled components
+  echo -e "${COLOR_BOLD}Setup Components (to be installed):${COLOR_RESET}"
+  local -a component_keys=(symlinks oh_my_zsh zsh_plugins homebrew mise osa_snippets git cocoapods)
+  for key in "${component_keys[@]}"; do
+    local enabled=$(yq eval ".components.${key} // false" "$resolved_path" 2>/dev/null)
+    if [[ "$enabled" == "true" ]]; then
+      echo -e "  ${COLOR_GREEN}✓${COLOR_RESET} $key"
+    fi
+  done
+  echo ""
+  
+  # Show enabled runtimes
+  echo -e "${COLOR_BOLD}Runtimes (installed via mise):${COLOR_RESET}"
+  local -a runtime_keys=(node python ruby java rust go deno elixir erlang)
+  local any_enabled=false
+  for runtime in "${runtime_keys[@]}"; do
+    local enabled=$(yq eval ".runtimes.${runtime}.enabled // false" "$resolved_path" 2>/dev/null)
+    if [[ "$enabled" == "true" ]]; then
+      local version=$(yq eval ".runtimes.${runtime}.version // \"latest\"" "$resolved_path" 2>/dev/null)
+      echo -e "  ${COLOR_GREEN}✓${COLOR_RESET} $runtime (${COLOR_CYAN}${version}${COLOR_RESET})"
+      any_enabled=true
+    fi
+  done
+  if [[ "$any_enabled" != "true" ]]; then
+    echo "  (none enabled)"
+  fi
+  echo ""
+  
+  # Show snippet repos
+  echo -e "${COLOR_BOLD}Snippet Repositories:${COLOR_RESET}"
+  local snippet_repos=$(yq eval '.snippets | keys | .[]' "$resolved_path" 2>/dev/null)
+  if [[ -n "$snippet_repos" ]]; then
+    while IFS= read -r repo; do
+      [[ -z "$repo" ]] && continue
+      local enabled=$(yq eval ".snippets.${repo}.enabled" "$resolved_path" 2>/dev/null)
+      if [[ "$enabled" == "true" ]]; then
+        local features=$(yq eval ".snippets.${repo}.features | .[]" "$resolved_path" 2>/dev/null)
+        if [[ -n "$features" ]]; then
+          echo -e "  ${COLOR_GREEN}✓${COLOR_RESET} $repo"
+          while IFS= read -r feature; do
+            [[ -z "$feature" ]] && continue
+            echo -e "      • ${COLOR_CYAN}${feature}${COLOR_RESET}"
+          done <<< "$features"
+        else
+          echo -e "  ${COLOR_GREEN}✓${COLOR_RESET} $repo (no specific features)"
+        fi
+      fi
+    done <<< "$snippet_repos"
+  else
+    echo "  (none)"
+  fi
+  echo ""
+  
+  echo -e "${COLOR_GREEN}✓ Configuration is valid and ready to use${COLOR_RESET}"
+  echo ""
+  echo -e "${COLOR_BOLD}To apply this configuration, run:${COLOR_RESET}"
+  echo "  ${COLOR_CYAN}./osa-cli.zsh --config ${profile}${COLOR_RESET}"
+  echo "  ${COLOR_CYAN}./osa-cli.zsh --config ${profile} --dry-run${COLOR_RESET} (preview without installing)"
+  echo ""
+  
+  return 0
 }
 
 # Global flag for dry-run mode
@@ -777,7 +1040,7 @@ automated_setup() {
     selected_components+=("mise")
   fi
   
-  if [[ "$OSA_SETUP_OSA_SNIPPETS" == "true" ]] && is_component_available "osa-snippets"; then
+  if [[ "$OSA_SETUP_OSA_SNIPPETS" == "true" ]]; then
     selected_components+=("osa-snippets")
   fi
   
@@ -814,13 +1077,12 @@ automated_setup() {
   # Save the configuration for future runs
   save_config
   
-  # Auto-source the new shell configuration
+  # Auto-source the new shell configuration (but skip config loading during setup)
   echo ""
   echo -e "${COLOR_CYAN}Sourcing your new shell configuration...${COLOR_RESET}"
-  if [[ -f "$HOME/.zshrc" ]]; then
-    source "$HOME/.zshrc"
-    echo -e "${COLOR_GREEN}✨ Shell updated! You're ready to go.${COLOR_RESET}"
-  fi
+  OSA_SKIP_CONFIG_LOAD=true source "$HOME/.zshrc"
+  unset OSA_SKIP_CONFIG_LOAD
+  echo -e "${COLOR_GREEN}✨ Shell updated! You're ready to go.${COLOR_RESET}"
   
   # Show next steps
   echo ""
@@ -865,7 +1127,10 @@ ${COLOR_BOLD}OPTIONS:${COLOR_RESET}
   --disable-osa-snippets  Skip osa-snippets installation (enabled by default)
   --disable-git           Skip Git configuration (default: configure git)
   --skip-cocoapods        Skip CocoaPods installation (useful for testing)
-  --doctor                Validate installation and suggest fixes (no changes made)
+  --doctor                Validate installation health (no changes made)
+                          Usage: ./osa-cli.zsh --doctor [optional: config name]
+                          ./osa-cli.zsh --doctor              # Check installation
+                          ./osa-cli.zsh --doctor minimal      # Validate minimal.yaml
   --report                Generate system report for bug reporting
   --report-json           Generate system report in JSON format
   --report-url            Generate GitHub issue URL with pre-filled environment info
@@ -987,7 +1252,7 @@ list_configs() {
     return 1
   fi
   
-  for config_file in "$configs_dir"/*.json; do
+  for config_file in "$configs_dir"/*.yaml; do
     if [[ ! -f "$config_file" ]]; then
       continue
     fi
@@ -995,10 +1260,10 @@ list_configs() {
     local filename=$(basename "$config_file")
     local description=""
     
-    if command -v jq &> /dev/null; then
-      description=$(jq -r '.description // "No description"' "$config_file" 2>/dev/null)
+    if command -v yq &> /dev/null; then
+      description=$(yq eval '.description // "No description"' "$config_file" 2>/dev/null)
     else
-      description="(Install jq to see descriptions)"
+      description="(Install yq to see descriptions)"
     fi
     
     printf "  ${COLOR_CYAN}%-30s${COLOR_RESET} %s\n" "$filename" "$description"
@@ -1149,7 +1414,7 @@ clean_all() {
   echo -e "${COLOR_YELLOW}⚠${COLOR_RESET}  ${COLOR_BOLD}This will remove:${COLOR_RESET}"
   echo "   • ~/.osa symlink → $OSA_REPO_PATH"
   echo "   • ~/.zshrc symlink → ~/.osa/src/zsh/.zshrc"
-  echo "   • ~/.osaconfig (saved configuration)"
+  echo "   • ~/.osa-config (saved configuration)"
   echo "   • ~/.mise.toml (runtime versions)"
   echo ""
   
@@ -1216,10 +1481,10 @@ clean_all() {
     ((removed_count++))
   fi
   
-  # Remove ~/.osaconfig
-  if [[ -f "$HOME/.osaconfig" ]]; then
-    rm -f "$HOME/.osaconfig"
-    echo -e "  ${COLOR_GREEN}✓${COLOR_RESET} Removed ~/.osaconfig"
+  # Remove ~/.osa-config
+  if [[ -f "$HOME/.osa-config" ]]; then
+    rm -f "$HOME/.osa-config"
+    echo -e "  ${COLOR_GREEN}✓${COLOR_RESET} Removed ~/.osa-config"
     ((removed_count++))
   fi
   
@@ -1244,7 +1509,17 @@ clean_all() {
 }
 
 # Doctor: Validate and repair OSA installation
+# Doctor: Validate installation or specific config file
 doctor() {
+  local config_to_validate="$1"
+  
+  # If a config is provided, validate it instead of checking installation
+  if [[ -n "$config_to_validate" ]]; then
+    validate_config "$config_to_validate"
+    return $?
+  fi
+  
+  # Otherwise, run standard installation validation
   echo -e "${COLOR_BOLD}${COLOR_CYAN}"
   echo "╔════════════════════════════════════════════════════════════╗"
   echo "║              OSA Doctor - Validate & Repair                ║"
@@ -1554,7 +1829,7 @@ main() {
         shift
         ;;
       # Primary actions (first one wins) - Note: --config is special, it can take optional arg
-      -i|--interactive|-a|--auto|-l|--list|--list-configs|--info|--doctor|--scan-secrets|--migrate-secrets|--setup-git-hook|--clean-symlinks|--clean-oh-my-zsh|--minimal|--all|--report|--report-json|--report-url)
+      -i|--interactive|-a|--auto|-l|--list|--list-configs|--info|--scan-secrets|--migrate-secrets|--setup-git-hook|--clean-symlinks|--clean-oh-my-zsh|--minimal|--all|--report|--report-json|--report-url)
         if [[ -z "$primary_action" ]]; then
           primary_action="$1"
         fi
@@ -1578,12 +1853,12 @@ main() {
         shift
         ;;
       # Options that take arguments
-      --config|--config-file|--config-json|--config-url|--enable|--disable)
+      --config|--config-file|--config-json|--config-url|--enable|--disable|--doctor)
         if [[ -z "$primary_action" ]]; then
           primary_action="$1"
           shift
-          # For --config, argument is optional. Peek ahead to see if next arg looks like a value
-          if [[ "$primary_action" == "--config" ]]; then
+          # For --config and --doctor, argument is optional. Peek ahead to see if next arg looks like a value
+          if [[ "$primary_action" == "--config" || "$primary_action" == "--doctor" ]]; then
             # Check if next arg exists and doesn't start with - (i.e., is a value, not a flag)
             if [[ -n "$1" && ! "$1" =~ ^- ]]; then
               action_arg="$1"
@@ -1707,7 +1982,7 @@ main() {
       exit $?
       ;;
     --doctor)
-      doctor
+      doctor "$action_arg"
       exit $?
       ;;
     --scan-secrets)

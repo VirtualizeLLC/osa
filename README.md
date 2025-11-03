@@ -341,6 +341,287 @@ Check out the **[osa-scripts repository](https://github.com/VirtualizeLLC/osa-sc
 - 📖 **[CONTRIBUTING.md](CONTRIBUTING.md)** - Code standards, testing, development workflow
 - 📖 **[tests/README.md](tests/README.md)** - Testing framework and test writing guide
 
+## CLI Commands
+
+The `osa-cli.zsh` script provides a comprehensive interface for setup and configuration management. After setup, all commands are available via the `osa` shortcut.
+
+### Setup & Installation Modes
+
+<table>
+  <thead>
+    <tr>
+      <th>Command</th>
+      <th>Arguments</th>
+      <th>Description</th>
+      <th>Use When</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>-i, --interactive</code></td>
+      <td>None</td>
+      <td>Start interactive setup wizard (prompts for each component)</td>
+      <td>First-time setup, exploring options, customizing per component</td>
+    </tr>
+    <tr>
+      <td><code>-a, --auto</code></td>
+      <td>None</td>
+      <td>Run automated setup using saved config from <code>~/.osa-config</code></td>
+      <td>Reproducible setup on a new machine (requires prior save)</td>
+    </tr>
+    <tr>
+      <td><code>--minimal</code></td>
+      <td>None</td>
+      <td>Quick install: core shell + mise runtime manager</td>
+      <td>Fast lightweight setup, development environments, servers</td>
+    </tr>
+    <tr>
+      <td><code>--all</code></td>
+      <td>None</td>
+      <td>Enable all available components</td>
+      <td>Complete setup with everything OSA supports</td>
+    </tr>
+    <tr>
+      <td><code>--config</code></td>
+      <td><code>FILE</code> or <code>NAME</code></td>
+      <td>Use JSON config file (auto-resolves from <code>configs/</code>)</td>
+      <td>Preset configurations: <code>./osa-cli.zsh --config minimal</code></td>
+    </tr>
+    <tr>
+      <td><code>--config-url</code></td>
+      <td><code>HTTPS_URL</code></td>
+      <td>Download and use JSON config from remote URL (HTTPS only)</td>
+      <td>Team setups, GitHub gists, remote configs</td>
+    </tr>
+    <tr>
+      <td><code>--dry-run</code></td>
+      <td>None</td>
+      <td>Show what would be installed without running any scripts</td>
+      <td>Preview before committing, testing configs</td>
+    </tr>
+  </tbody>
+</table>
+
+### Information & Reporting
+
+<table>
+  <thead>
+    <tr>
+      <th>Command</th>
+      <th>Arguments</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>-h, --help</code></td>
+      <td>None</td>
+      <td>Show help message with all available options</td>
+    </tr>
+    <tr>
+      <td><code>--list-configs</code></td>
+      <td>None</td>
+      <td>List all available preset configurations</td>
+    </tr>
+    <tr>
+      <td><code>-l, --list</code></td>
+      <td>None</td>
+      <td>List all available components</td>
+    </tr>
+    <tr>
+      <td><code>--info</code></td>
+      <td>None</td>
+      <td>Show platform information (OS, architecture, shell, git)</td>
+    </tr>
+    <tr>
+      <td><code>--status</code></td>
+      <td>None</td>
+      <td>Show current configuration and enabled components</td>
+    </tr>
+    <tr>
+      <td><code>--doctor</code></td>
+      <td>None</td>
+      <td>Validate installation and suggest fixes (no changes made)</td>
+    </tr>
+    <tr>
+      <td><code>--report</code></td>
+      <td>None</td>
+      <td>Generate system report for debugging/bug reporting</td>
+    </tr>
+    <tr>
+      <td><code>--report-json</code></td>
+      <td>None</td>
+      <td>Generate system report in JSON format</td>
+    </tr>
+    <tr>
+      <td><code>--report-url</code></td>
+      <td>None</td>
+      <td>Generate pre-filled GitHub issue URL with environment info</td>
+    </tr>
+  </tbody>
+</table>
+
+### Component Management
+
+<table>
+  <thead>
+    <tr>
+      <th>Command</th>
+      <th>Arguments</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>--enable</code></td>
+      <td><code>COMPONENT</code></td>
+      <td>Enable a specific component (e.g., <code>--enable cocoapods</code>)</td>
+    </tr>
+    <tr>
+      <td><code>--disable</code></td>
+      <td><code>COMPONENT</code></td>
+      <td>Disable a specific component (e.g., <code>--disable cocoapods</code>)</td>
+    </tr>
+    <tr>
+      <td><code>--disable-osa-snippets</code></td>
+      <td>None</td>
+      <td>Skip osa-snippets installation (enabled by default)</td>
+    </tr>
+    <tr>
+      <td><code>--disable-git</code></td>
+      <td>None</td>
+      <td>Skip Git configuration (default: configure git)</td>
+    </tr>
+    <tr>
+      <td><code>--skip-cocoapods</code></td>
+      <td>None</td>
+      <td>Skip CocoaPods installation (useful for testing)</td>
+    </tr>
+    <tr>
+      <td><code>--local</code></td>
+      <td>None</td>
+      <td>Skip global mise setup (only setup local configs)</td>
+    </tr>
+  </tbody>
+</table>
+
+### Cleanup & Maintenance
+
+<table>
+  <thead>
+    <tr>
+      <th>Command</th>
+      <th>Arguments</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>--clean</code></td>
+      <td>None</td>
+      <td>Remove all OSA data (combinable with <code>--minimal</code> or <code>--all</code> for clean reinstall)</td>
+    </tr>
+    <tr>
+      <td><code>--clean-symlinks</code></td>
+      <td>None</td>
+      <td>Remove all OSA symlinks (with interactive confirmation)</td>
+    </tr>
+    <tr>
+      <td><code>--clean-oh-my-zsh</code></td>
+      <td>None</td>
+      <td>Remove oh-my-zsh plugin symlinks only</td>
+    </tr>
+    <tr>
+      <td><code>--unsafe</code></td>
+      <td>None</td>
+      <td>Skip confirmation prompts for destructive operations (use with caution)</td>
+    </tr>
+  </tbody>
+</table>
+
+### Security
+
+<table>
+  <thead>
+    <tr>
+      <th>Command</th>
+      <th>Arguments</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>--scan-secrets</code></td>
+      <td>None</td>
+      <td>Scan constructors for hardcoded secrets/credentials</td>
+    </tr>
+    <tr>
+      <td><code>--migrate-secrets</code></td>
+      <td>None</td>
+      <td>Interactive wizard to move secrets to secure storage</td>
+    </tr>
+    <tr>
+      <td><code>--setup-git-hook</code></td>
+      <td>None</td>
+      <td>Install pre-commit hook to prevent secret commits</td>
+    </tr>
+  </tbody>
+</table>
+
+### Verbosity & Output
+
+<table>
+  <thead>
+    <tr>
+      <th>Command</th>
+      <th>Arguments</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>-v, --verbose</code></td>
+      <td>None</td>
+      <td>Show detailed output from installers (git, oh-my-zsh, etc.)</td>
+    </tr>
+  </tbody>
+</table>
+
+### Common Examples
+
+```bash
+# First-time interactive setup
+./osa-cli.zsh --interactive
+
+# Fast setup with core shell + mise
+./osa-cli.zsh --minimal
+
+# Use a preset configuration
+./osa-cli.zsh --config react-native
+
+# Test config without installing
+./osa-cli.zsh --config web --dry-run
+
+# Download and use a team config
+./osa-cli.zsh --config-url https://raw.github.com/yourorg/osa-configs/main/team.json
+
+# Enable just CocoaPods (requires prior setup)
+./osa-cli.zsh --enable cocoapods --auto
+
+# Remove all OSA data for fresh reinstall
+./osa-cli.zsh --clean --minimal
+
+# Check platform and current setup
+./osa-cli.zsh --info && ./osa-cli.zsh --status
+
+# Generate debug report for bug reporting
+./osa-cli.zsh --report
+
+# After setup, use the osa shortcut from anywhere
+osa --info
+osa --config android
+```
+
 ## Windows Native Setup
 
 Windows doesn't have native bash/zsh support, so you'll need to manually configure scripts and tools. OSA primarily targets Unix-like environments, but we include some Windows utilities:

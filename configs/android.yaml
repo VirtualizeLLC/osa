@@ -1,0 +1,69 @@
+version: "1.0"
+description: "Android Development Setup - Android app development with Android Studio"
+profile: android
+
+components:
+  # Required setup components
+  symlinks: true
+  oh_my_zsh: true
+  zsh_plugins: true
+  osa_snippets: true
+  
+  # Recommended setup components
+  homebrew: true
+  mise: true
+  git: true
+  cocoapods: false  # Not needed for Android
+  
+  # Snippets runtime flags
+  android: true  # Android development tools
+  react_native: false
+  node: false
+  python: false
+  ruby: false
+  java: true  # Android requires Java
+  nvm: false
+  fnm: false
+  vscode: true
+  direnv: false
+  keychain: false
+  ngrok: false
+  mac_tools: false  # Android dev is cross-platform
+  xcode: false  # Xcode not needed
+  egpu: false
+  compression: true
+
+runtimes:
+  node:
+    enabled: true
+    version: "22"
+  python:
+    enabled: true
+    version: "3.13"
+  ruby:
+    enabled: false
+    version: "3.4.0"
+  java:
+    enabled: true
+    version: "openjdk-21"
+  rust:
+    enabled: false
+    version: "stable"
+  go:
+    enabled: false
+    version: "1.23"
+  deno:
+    enabled: false
+    version: "latest"
+  elixir:
+    enabled: false
+    version: "latest"
+  erlang:
+    enabled: false
+    version: "latest"
+
+snippets:
+  osasnippets:
+    enabled: true
+    features:
+      - android

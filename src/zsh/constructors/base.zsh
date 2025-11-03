@@ -10,8 +10,9 @@ safe_source() {
 }
 
 # Load OSA configuration (component enablement flags from setup)
-if [[ -f "$HOME/.osaconfig" ]]; then
-  source "$HOME/.osaconfig"
+# Skip during setup - use the config that was just loaded instead
+if [[ -f "$HOME/.osa-config" ]] && [[ "$OSA_SKIP_CONFIG_LOAD" != "true" ]]; then
+  source "$HOME/.osa-config"
 fi
 
 # Mise - polyglot runtime manager (MUST BE FIRST for proper precedence)
@@ -42,17 +43,23 @@ safe_source  "$OSA_ZSH_PLUGINS/oh-my-zsh-config.zsh"
 
 # Must be loaded first to set ANDROID_HOME and PATH
 
-if [[ "${OSA_SETUP_ANDROID:-false}" == "true" ]]; then
+if [[ "${OSA_CONFIG_COMPONENTS_ANDROID}" == "true" ]]; then
   safe_source "$OSA_ZSH_PLUGINS/android-sdk.zsh"
 fi
 
 # OSA CLI runtime - exposes 'osa' command for quick access
 safe_source "$OSA_ZSH_ALIASES/osa.zsh"
 
+# Set OSA_CONFIG to the OSA installation directory
+OSA_CONFIG="${0:A:h:h:h:h}"
+
+# Define OSA paths
+export OSA_ZSH_PLUGINS=$OSA_CONFIG/src/zsh/plugin-init
+export OSA_ZSH_ALIASES=$OSA_CONFIG/src/zsh/aliases
+
 # Snippets - community shell helpers
 if [[ ! $OSA_SKIP_SNIPPETS ]] ; then
   SNIPPETS_ENTRY="$OSA_CONFIG/src/zsh/snippets/entry.zsh"
-  
   if [[ -f "$SNIPPETS_ENTRY" ]]; then
     source "$SNIPPETS_ENTRY" 2>/dev/null || {
       echo "WARNING: Failed to source osa-snippets from $SNIPPETS_ENTRY" >&2

@@ -1,0 +1,70 @@
+version: "1.0"
+description: "macOS Development Setup - General purpose macOS development"
+profile: macos
+
+components:
+  # Required setup components
+  symlinks: true
+  oh_my_zsh: true
+  zsh_plugins: true
+  osa_snippets: true
+  
+  # Recommended setup components
+  homebrew: true
+  mise: true
+  git: true
+  cocoapods: false  # Not needed for general macOS dev
+  
+  # Snippets runtime flags
+  android: false
+  react_native: false
+  node: false
+  python: false
+  ruby: false
+  java: false
+  nvm: false
+  fnm: false
+  vscode: true
+  direnv: true
+  keychain: true  # macOS keychain utilities
+  ngrok: false
+  mac_tools: true  # macOS-specific utilities
+  xcode: false
+  egpu: false
+  compression: true
+
+runtimes:
+  node:
+    enabled: true
+    version: "22"
+  python:
+    enabled: true
+    version: "3.13"
+  ruby:
+    enabled: true
+    version: "3.4.0"
+  java:
+    enabled: true
+    version: "openjdk-21"
+  rust:
+    enabled: false
+    version: "stable"
+  go:
+    enabled: true
+    version: "1.23"
+  deno:
+    enabled: false
+    version: "latest"
+  elixir:
+    enabled: false
+    version: "latest"
+  erlang:
+    enabled: false
+    version: "latest"
+
+snippets:
+  osasnippets:
+    enabled: true
+    features:
+      - keychain
+      - mac_tools
