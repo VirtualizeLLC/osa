@@ -219,6 +219,51 @@ A: We use `jq` to parse JSON configs. If it's not installed, run: `brew install 
 **Q: Can I version control my config?**
 A: Absolutely! Commit your custom config to git and share it with your team.
 
+### CocoaPods & Ruby Gem Installation Issues
+
+**Q: Why do I get "readonly" errors when installing CocoaPods?**
+A: When `gem install cocoapods` runs, it tries to write to Ruby's gem directory. If you see permission errors:
+
+```
+ERROR: While executing gem ... (Gem::FilePermissionError)
+  You don't have write permissions
+```
+
+**Solutions (in order of preference):**
+
+1. **Use user-install mode** (automatic in OSA):
+   ```bash
+   gem install cocoapods --user-install
+   ```
+   This installs gems to `~/.gem` which is always writable.
+
+2. **Set GEM_HOME** to a user directory:
+   ```bash
+   export GEM_HOME="$HOME/.gem"
+   export PATH="$GEM_HOME/bin:$PATH"
+   gem install cocoapods
+   ```
+
+3. **Use sudo** (last resort):
+   ```bash
+   sudo gem install cocoapods
+   ```
+   ⚠️ Only use this if other methods fail. Installing gems as root is not recommended.
+
+**Q: Why does CocoaPods need a specific Ruby version?**
+A: CocoaPods has Ruby version requirements:
+- **CocoaPods 1.14+**: Requires Ruby 3.0+
+- **CocoaPods 1.13**: Requires Ruby 2.7+
+- **CocoaPods 1.12**: Requires Ruby 2.7+
+
+OSA handles version compatibility automatically and warns you if there's a mismatch.
+
+**Q: Can I skip CocoaPods installation?**
+A: Yes, CocoaPods is optional. During interactive setup, answer "No" when asked. You can install it later manually:
+```bash
+./osa-cli.zsh --enable cocoapods --auto
+```
+
 ## Security
 
 ### Remote Configuration Security

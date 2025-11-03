@@ -558,6 +558,31 @@ interactive_setup() {
     exit 1
   fi
   
+  # macOS pre-flight check: Xcode Command Line Tools
+  if [[ "$OSA_IS_MACOS" == "true" ]]; then
+    if ! command -v xcode-select &>/dev/null || ! xcode-select -p &>/dev/null; then
+      echo -e "${COLOR_YELLOW}⚠️  Xcode Command Line Tools not found${COLOR_RESET}"
+      echo ""
+      echo "Homebrew and many development tools require Xcode CLT."
+      echo ""
+      echo "Two ways to install:"
+      echo ""
+      echo "  Option 1 (Easiest):"
+      echo "    ${COLOR_BOLD}xcode-select --install${COLOR_RESET}"
+      echo ""
+      echo "  Option 2 (From Apple Developer):"
+      echo "    Visit: https://developer.apple.com/download/more/"
+      echo "    Search for 'Command Line Tools'"
+      echo "    Download and install (Apple login required)"
+      echo ""
+      
+      if ! ask_yes_no "Continue anyway?" "n"; then
+        echo -e "${COLOR_RED}Setup cancelled.${COLOR_RESET}"
+        return 1
+      fi
+    fi
+  fi
+  
   echo -e "${COLOR_BOLD}Select components to install:${COLOR_RESET}\n"
   
   # CRITICAL: Always include required components IN CORRECT ORDER
@@ -762,6 +787,21 @@ automated_setup() {
   
   # Save the configuration for future runs
   save_config
+  
+  # Auto-source the new shell configuration
+  echo ""
+  echo -e "${COLOR_CYAN}Sourcing your new shell configuration...${COLOR_RESET}"
+  if [[ -f "$HOME/.zshrc" ]]; then
+    source "$HOME/.zshrc"
+    echo -e "${COLOR_GREEN}✨ Shell updated! You're ready to go.${COLOR_RESET}"
+  fi
+  
+  # Show next steps
+  echo ""
+  echo -e "${COLOR_BOLD}${COLOR_CYAN}Next steps:${COLOR_RESET}"
+  echo "  1. Try it out: ${COLOR_BOLD}mise --version${COLOR_RESET}"
+  echo "  2. Test in a new terminal (recommended): ${COLOR_BOLD}zsh${COLOR_RESET}"
+  echo "  3. Happy coding! 🚀"
 }
 
 # Show help

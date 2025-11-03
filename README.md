@@ -17,6 +17,26 @@ OSA is a shell-first, interactive CLI tool that automates the tedious setup of d
 - 🔐 **Extensible**: Keep secrets and machine-specific configs out of git via constructors
 - 📦 **Modern Tooling**: Built-in support for mise (replaces nvm/rbenv/pyenv/jenv)
 
+### Why OSA When Mise Exists?
+
+**Mise is great for runtime management, but OSA solves the whole setup problem:**
+
+Mise only handles runtime versions (Node, Python, Ruby, etc.). OSA handles **everything**:
+
+| Task | Mise | OSA |
+|------|------|-----|
+| **Runtime versions** (Node, Python, Ruby) | ✅ Yes | ✅ Yes (via mise) |
+| **Homebrew packages** (git, ripgrep, etc.) | ❌ No | ✅ Yes |
+| **Oh My Zsh + plugins** | ❌ No | ✅ Yes |
+| **Shell configuration** | ❌ No | ✅ Yes |
+| **Git config** (user, aliases, ignores) | ❌ No | ✅ Yes |
+| **IDE settings** (VS Code, PhpStorm) | ❌ No | ✅ Yes |
+| **Mobile dev tools** (CocoaPods, Android SDK) | ❌ No | ✅ Yes |
+| **Security model** (secrets isolation) | ❌ No | ✅ Yes |
+| **Team consistency** (shared configs) | ❌ No | ✅ Yes |
+
+**TL;DR:** Mise is one tool. OSA is an orchestrator that brings together mise + shell + package manager + IDE + security best practices into one unified setup experience.
+
 ## Tested Platforms
 
 <ul>
@@ -28,9 +48,7 @@ OSA is a shell-first, interactive CLI tool that automates the tedious setup of d
 
 ## Quick Start
 
-**Two ways to get started:**
-
-### Option 1: Clone from GitHub (For Development)
+**Clone and run:**
 
 ```bash
 git clone https://github.com/VirtualizeLLC/osa.git ~/osa
@@ -38,40 +56,109 @@ cd ~/osa
 zsh ./osa-cli.zsh --interactive
 ```
 
-### Option 2: Install via Homebrew (Recommended)
+**Note:** If you get "permission denied", try: `chmod +x ./osa-cli.zsh && zsh ./osa-cli.zsh --interactive`
 
+After setup completes, the `osa` command will be available globally from any directory:
 ```bash
-brew tap VirtualizeLLC/homebrew-osa
-brew install osa
-osa --interactive
+osa --interactive   # Works from anywhere
+osa --help          # Try it out
 ```
 
 That's it. The CLI will guide you through the rest.
 
-### First-Time Setup Steps
+### Setup Instructions by Platform
 
-1. **Clone this repo**:
-   ```bash
-   git clone https://github.com/VirtualizeLLC/osa.git ~/osa
-   cd ~/osa
-   ```
+<table>
+  <thead>
+    <tr>
+      <th>Platform</th>
+      <th>Setup Command</th>
+      <th>Dependencies</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>macOS</strong></td>
+      <td>
+        <code>git clone https://github.com/VirtualizeLLC/osa.git ~/osa && cd ~/osa && brew bundle && zsh ./osa-cli.zsh --interactive</code>
+      </td>
+      <td>Git, Zsh, Homebrew</td>
+      <td>✅ Fully Tested</td>
+    </tr>
+    <tr>
+      <td><strong>Linux (Ubuntu/Debian)</strong></td>
+      <td>
+        <code>git clone https://github.com/VirtualizeLLC/osa.git ~/osa && cd ~/osa && sudo apt-get install -y git zsh jq && zsh ./osa-cli.zsh --interactive</code>
+      </td>
+      <td>Git, Zsh, jq</td>
+      <td>✅ Supported</td>
+    </tr>
+    <tr>
+      <td><strong>WSL 2 (Windows)</strong></td>
+      <td>
+        <code>git clone https://github.com/VirtualizeLLC/osa.git ~/osa && cd ~/osa && sudo apt-get install -y git zsh jq && zsh ./osa-cli.zsh --interactive</code>
+      </td>
+      <td>Git, Zsh, jq</td>
+      <td>✅ Supported</td>
+    </tr>
+    <tr>
+      <td><strong>Android (Termux)</strong></td>
+      <td>
+        <code>pkg install git zsh openssh && git clone https://github.com/VirtualizeLLC/osa.git ~/osa && cd ~/osa && zsh ./osa-cli.zsh --interactive</code>
+      </td>
+      <td>Git, Zsh, OpenSSH</td>
+      <td>⚠️ Experimental</td>
+    </tr>
+    <tr>
+      <td><strong>Windows (Native)</strong></td>
+      <td>Use <strong>WSL 2</strong> (recommended) or see <a href="#windows-native-setup">manual setup</a></td>
+      <td>WSL 2 or manual config</td>
+      <td>⚠️ Limited</td>
+    </tr>
+  </tbody>
+</table>
 
-2. **Install dependencies** (optional but recommended):
-   ```bash
-   brew bundle  # Installs jq, git, zsh, and optional tools
-   ```
+### Detailed Setup by Platform
 
-3. **Make zsh your login shell** (if not already):
-   ```bash
-   chsh -s $(which zsh)
-   ```
+#### macOS
+```bash
+git clone https://github.com/VirtualizeLLC/osa.git ~/osa
+cd ~/osa
+brew bundle              # Install dependencies (optional but recommended)
+zsh ./osa-cli.zsh --interactive
+```
 
-4. **Run the interactive setup**:
-   ```bash
-   zsh ./osa-cli.zsh --interactive
-   ```
+#### Linux (Ubuntu/Debian)
+```bash
+git clone https://github.com/VirtualizeLLC/osa.git ~/osa
+cd ~/osa
+sudo apt-get install -y git zsh jq  # Install dependencies
+zsh ./osa-cli.zsh --interactive
+```
 
-5. **Restart your terminal** and you're done!
+#### WSL 2 (Windows Subsystem for Linux)
+```bash
+# In WSL terminal
+git clone https://github.com/VirtualizeLLC/osa.git ~/osa
+cd ~/osa
+sudo apt-get install -y git zsh jq  # Install dependencies
+zsh ./osa-cli.zsh --interactive
+```
+
+#### Android (Termux)
+```bash
+# In Termux terminal
+pkg install git zsh openssh
+git clone https://github.com/VirtualizeLLC/osa.git ~/osa
+cd ~/osa
+zsh ./osa-cli.zsh --interactive
+```
+
+#### Windows (Native)
+Use **WSL 2** for best experience (see WSL 2 section above).
+
+For manual setup, see [Windows Native Setup](#windows-native-setup) section.
 
 ### Alternative Setup Methods
 
@@ -115,6 +202,51 @@ zsh ./osa-cli.zsh --all
 - Go (1.21, 1.22, 1.23)
 - Rust (stable)
 - Deno, Elixir, Erlang (latest)
+
+## About Mise
+
+**[Mise](https://mise.jdx.dev/)** is a polyglot runtime manager that replaces nvm, rbenv, pyenv, jenv, and similar tools.
+
+### Why Mise?
+
+- ✅ **Single tool** for all languages (no more nvm + rbenv + pyenv juggling)
+- ✅ **Fast**: Cached, optimized binaries (much faster than building from source)
+- ✅ **Per-project versions**: Automatic switching via `.mise.toml` files
+- ✅ **Team consistency**: Everyone uses the same runtime versions
+- ✅ **Easy updates**: `mise install` from `.mise.toml`
+
+### Quick Start with Mise
+
+After OSA setup, mise is ready to use:
+
+```bash
+# Install runtimes from .mise.toml
+mise install
+
+# Check installed versions
+mise list
+
+# Switch versions
+mise use node@20
+
+# Show what's available
+mise list-all node
+```
+
+### Per-Project Setup
+
+Create `.mise.toml` in your project:
+
+```toml
+[tools]
+node = "20.11.0"
+python = "3.12"
+ruby = "3.3.0"
+```
+
+When you `cd` into the directory, mise automatically activates those versions. No more shell aliasing or version switching scripts!
+
+**Learn more:** [Mise Documentation](https://mise.jdx.dev/) | [GitHub](https://github.com/jdx/mise)
 
 ## Security Model: Why It Matters
 

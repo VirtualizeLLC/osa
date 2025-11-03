@@ -199,18 +199,46 @@ install_cocoapods() {
     }
   }
   
-  # Install CocoaPods
+  # Set up GEM_HOME to user directory to avoid permission issues
+  # This ensures gem install writes to ~/.gem instead of system directories
+  export GEM_HOME="$HOME/.gem"
+  export PATH="$GEM_HOME/bin:$PATH"
+  
+  # Create gem directories if they don't exist
+  mkdir -p "$GEM_HOME/bin" "$GEM_HOME/specs" 2>/dev/null || true
+  
+  # Install CocoaPods with --user-install flag and verbose error handling
   echo -e "${COLOR_CYAN}Installing CocoaPods ${COCOAPODS_VERSION}...${COLOR_RESET}"
   if [[ "$COCOAPODS_VERSION" == "latest" ]]; then
-    gem install cocoapods || {
-      echo -e "${COLOR_RED}✗${COLOR_RESET} Failed to install CocoaPods"
-      return 1
-    }
+    if gem install cocoapods --user-install 2>&1; then
+      echo -e "${COLOR_GREEN}✓${COLOR_RESET} CocoaPods installed successfully"
+    else
+      # Fallback to standard install if user-install fails
+      echo -e "${COLOR_YELLOW}⚠${COLOR_RESET} Standard gem install attempt..."
+      if gem install cocoapods 2>&1; then
+        echo -e "${COLOR_GREEN}✓${COLOR_RESET} CocoaPods installed successfully"
+      else
+        echo -e "${COLOR_RED}✗${COLOR_RESET} Failed to install CocoaPods"
+        echo -e "${COLOR_CYAN}→${COLOR_RESET} This usually means the gem directory doesn't have write permissions"
+        echo -e "${COLOR_CYAN}→${COLOR_RESET} Try running: sudo gem install cocoapods"
+        return 1
+      fi
+    fi
   else
-    gem install cocoapods --version "${COCOAPODS_VERSION}" || {
-      echo -e "${COLOR_RED}✗${COLOR_RESET} Failed to install CocoaPods ${COCOAPODS_VERSION}"
-      return 1
-    }
+    if gem install cocoapods --version "${COCOAPODS_VERSION}" --user-install 2>&1; then
+      echo -e "${COLOR_GREEN}✓${COLOR_RESET} CocoaPods ${COCOAPODS_VERSION} installed successfully"
+    else
+      # Fallback to standard install if user-install fails
+      echo -e "${COLOR_YELLOW}⚠${COLOR_RESET} Standard gem install attempt..."
+      if gem install cocoapods --version "${COCOAPODS_VERSION}" 2>&1; then
+        echo -e "${COLOR_GREEN}✓${COLOR_RESET} CocoaPods ${COCOAPODS_VERSION} installed successfully"
+      else
+        echo -e "${COLOR_RED}✗${COLOR_RESET} Failed to install CocoaPods ${COCOAPODS_VERSION}"
+        echo -e "${COLOR_CYAN}→${COLOR_RESET} This usually means the gem directory doesn't have write permissions"
+        echo -e "${COLOR_CYAN}→${COLOR_RESET} Try running: sudo gem install cocoapods --version ${COCOAPODS_VERSION}"
+        return 1
+      fi
+    fi
   fi
   
   # Verify installation
