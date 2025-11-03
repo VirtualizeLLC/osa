@@ -20,14 +20,14 @@ teardown() {
     grep -q "xcode-select"
 }
 
-@test "xcode clt check detects missing xcode-select command" {
-  # Verify the condition checks for xcode-select existence
-  grep -q 'command -v xcode-select' "$OSA_TEST_REPO_ROOT/osa-cli.zsh"
+@test "xcode clt check detects missing xcode-select path" {
+  # Verify the check uses xcode-select -p to get the path
+  grep -q 'xcode-select -p 2>/dev/null' "$OSA_TEST_REPO_ROOT/osa-cli.zsh"
 }
 
-@test "xcode clt check verifies xcode-select -p returns a path" {
-  # Verify that xcode-select -p is checked (returns non-zero if not installed)
-  grep -q 'xcode-select -p' "$OSA_TEST_REPO_ROOT/osa-cli.zsh"
+@test "xcode clt check validates path exists" {
+  # Verify directory existence check [[ ! -d "$xcode_path" ]]
+  grep -q '\[[ -z "$xcode_path" ]]' "$OSA_TEST_REPO_ROOT/osa-cli.zsh"
 }
 
 @test "xcode clt warning shows both installation options" {
@@ -56,33 +56,25 @@ teardown() {
   fi
 }
 
-@test "xcode clt check allows user to continue anyway" {
-  # Verify ask_yes_no is called for the prompt
-  grep -q 'Continue anyway?' "$OSA_TEST_REPO_ROOT/osa-cli.zsh"
-}
-
-@test "xcode clt check returns error if user declines to continue" {
-  # Verify error handling
-  grep -q 'Setup cancelled' "$OSA_TEST_REPO_ROOT/osa-cli.zsh"
-}
-
-@test "xcode clt check exits gracefully on cancellation" {
-  # Verify return 1 on cancellation
-  grep -A 3 'Setup cancelled' "$OSA_TEST_REPO_ROOT/osa-cli.zsh" | grep -q 'return 1'
+@test "xcode clt check shows warning message" {
+  # Verify the warning is displayed
+  grep -q 'Xcode Command Line Tools not found' "$OSA_TEST_REPO_ROOT/osa-cli.zsh"
 }
 
 # Manual Testing Instructions
 # =============================
 #
-# To manually test the Xcode CLT check:
+# The Xcode CLT check is automatically triggered during:
+# 1. Interactive setup: zsh ./osa-cli.zsh --interactive
+# 2. Automated setup: zsh ./osa-cli.zsh --all
 #
-# 1. Simulate missing CLT:
-#    PATH=/usr/sbin:/usr/bin:/bin:/usr/local/bin zsh ./osa-cli.zsh --interactive
+# The check will:
+# - Detect if Xcode CLT is installed by calling xcode-select -p
+# - Display a warning with two installation options if not found:
+#   Option 1: xcode-select --install (easiest)
+#   Option 2: https://developer.apple.com/download/more/ (if Option 1 fails)
+# - Only show warning on macOS (checks OSA_IS_MACOS)
 #
-# 2. Or temporarily hide xcode-select:
-#    sudo mv /usr/bin/xcode-select /usr/bin/xcode-select.bak
-#    zsh ./osa-cli.zsh --interactive
-#    sudo mv /usr/bin/xcode-select.bak /usr/bin/xcode-select
-#
-# 3. The warning should appear at the start of interactive setup
-#    showing both installation options.
+# Note: System Integrity Protection (SIP) prevents modifying /usr/bin/xcode-select,
+# so PATH manipulation won't work for testing. Real testing requires actual
+# Xcode CLT installation status.

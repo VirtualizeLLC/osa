@@ -53,6 +53,16 @@ Complete backend/polyglot environment:
 ./osa-cli.zsh --config-file configs/backend-dev.json
 ```
 
+### `macos.json`
+General macOS development environment (no mobile platforms):
+- **Components**: Symlinks, oh-my-zsh, zsh-plugins, homebrew, mise, git, iTerm2, VSCode
+- **Runtimes**: Node.js 22, Python 3.13, Ruby 3.4.0, Java OpenJDK 21, Go 1.23
+- **Best for**: macOS-only development, avoiding iOS/CocoaPods, web/backend development
+
+```bash
+./osa-cli.zsh --config-file configs/macos.json
+```
+
 ### `react-native.json` ⭐
 Complete React Native mobile development environment:
 - **Components**: All (symlinks, oh-my-zsh, zsh-plugins, homebrew, mise, git, iTerm2, VSCode, CocoaPods, Android tools)

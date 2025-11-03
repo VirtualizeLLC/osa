@@ -12,9 +12,15 @@
 
 # Ensure git is installed (always, regardless of OSA_SKIP_GIT_CONFIG)
 # This is needed for basic OSA operations like cloning repos
-if [[ "$OSA_IS_MACOS" == "true" ]] && [[ $(command -v git) != "/usr/local/bin/git" ]]; then 
-  echo "Installing latest git with brew..."
-  brew install git
+if [[ "$OSA_IS_MACOS" == "true" ]]; then
+  # Check if git needs updating
+  local installed_version=$(git --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+  local upstream_version=$(brew info git 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+  
+  # Only install if not installed or version is different
+  if [[ -z "$installed_version" ]] || [[ "$installed_version" != "$upstream_version" ]]; then
+    brew install git >/dev/null
+  fi
 fi
 
 # Skip git configuration if disabled

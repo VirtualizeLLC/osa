@@ -38,6 +38,9 @@ export OSA_SKIP_SNIPPETS=false
 # Git configuration flag (can be disabled with --disable-git)
 export OSA_SKIP_GIT_CONFIG=false
 
+# CocoaPods flag (can be disabled with --skip-cocoapods for testing)
+export OSA_SKIP_COCOAPODS=false
+
 # Setup profile name (tracks which preset was used: minimal, react-native, etc.)
 export OSA_SETUP_PROFILE="everything"
 
@@ -120,18 +123,28 @@ load_json_config() {
   
   # Load components
   local -a component_keys=(symlinks oh_my_zsh zsh_plugins homebrew mise osa_snippets git android iterm2 vscode cocoapods)
+  local -a undefined_components
   
   for key in "${component_keys[@]}"; do
     local enabled=$(jq -r ".components.${key} // false" "$resolved_path" 2>/dev/null)
+    local var_name="OSA_SETUP_$(normalize_key "$key")"
+    
     if [[ "$enabled" == "true" ]]; then
-      local var_name="OSA_SETUP_$(normalize_key "$key")"
-      # Safe assignment without eval - use typeset/declare
       typeset -g "$var_name=true"
     else
-      local var_name="OSA_SETUP_$(normalize_key "$key")"
       typeset -g "$var_name=false"
+      # Track undefined components (not explicitly set in config)
+      local component_exists=$(jq -r ".components | has(\"${key}\")" "$resolved_path" 2>/dev/null)
+      if [[ "$component_exists" != "true" ]]; then
+        undefined_components+=("$key")
+      fi
     fi
   done
+  
+  # Log undefined components that will be skipped (optional, can be removed if too verbose)
+  if [[ ${#undefined_components[@]} -gt 0 ]] && [[ "$OSA_VERBOSE" == "true" ]]; then
+    echo -e "${COLOR_CYAN}Skipping undefined components: ${undefined_components[*]}${COLOR_RESET}"
+  fi
   
   # Load runtimes
   local -a runtime_keys=(node python ruby java rust go deno elixir erlang)
@@ -560,26 +573,18 @@ interactive_setup() {
   
   # macOS pre-flight check: Xcode Command Line Tools
   if [[ "$OSA_IS_MACOS" == "true" ]]; then
-    if ! command -v xcode-select &>/dev/null || ! xcode-select -p &>/dev/null; then
+    # Check if xcode-select returns a valid path (CLT is installed)
+    # xcode-select -p returns the path to CLT, or fails if not installed
+    local xcode_path=$(xcode-select -p 2>/dev/null)
+    if [[ -z "$xcode_path" ]] || [[ ! -d "$xcode_path" ]]; then
       echo -e "${COLOR_YELLOW}⚠️  Xcode Command Line Tools not found${COLOR_RESET}"
       echo ""
       echo "Homebrew and many development tools require Xcode CLT."
+      echo "Install from Apple Developer:"
+      echo "  ${COLOR_BOLD}https://developer.apple.com/download/more/${COLOR_RESET}"
       echo ""
-      echo "Two ways to install:"
+      echo "Or try: ${COLOR_BOLD}xcode-select --install${COLOR_RESET}"
       echo ""
-      echo "  Option 1 (Easiest):"
-      echo "    ${COLOR_BOLD}xcode-select --install${COLOR_RESET}"
-      echo ""
-      echo "  Option 2 (From Apple Developer):"
-      echo "    Visit: https://developer.apple.com/download/more/"
-      echo "    Search for 'Command Line Tools'"
-      echo "    Download and install (Apple login required)"
-      echo ""
-      
-      if ! ask_yes_no "Continue anyway?" "n"; then
-        echo -e "${COLOR_RED}Setup cancelled.${COLOR_RESET}"
-        return 1
-      fi
     fi
   fi
   
@@ -647,8 +652,12 @@ interactive_setup() {
       continue
     fi
     
-    # Special handling for CocoaPods - ask with version selection
+    # Special handling for CocoaPods - ask with version selection (unless --skip-cocoapods)
     if [[ "$key" == "cocoapods" ]]; then
+      if [[ "$OSA_SKIP_COCOAPODS" == "true" ]]; then
+        echo -e "${COLOR_YELLOW}⊘${COLOR_RESET} Skipping CocoaPods (--skip-cocoapods flag set)"
+        continue
+      fi
       if is_component_available "$key"; then
         # Source the interactive CocoaPods setup
         if source "$OSA_CLI_DIR/src/setup/install-cocoapods-interactive.zsh"; then
@@ -723,9 +732,26 @@ interactive_setup() {
 
 # Automated setup using saved config
 automated_setup() {
-  echo -e "${COLOR_BOLD}Running automated setup from saved configuration...${COLOR_RESET}\n"
+  echo -e "${COLOR_BOLD}${COLOR_CYAN}▶ OSA Setup in progress...${COLOR_RESET}\n"
   
   print_platform_info
+  
+  # macOS pre-flight check: Xcode Command Line Tools
+  if [[ "$OSA_IS_MACOS" == "true" ]]; then
+    # Check if xcode-select returns a valid path (CLT is installed)
+    # xcode-select -p returns the path to CLT, or fails if not installed
+    local xcode_path=$(xcode-select -p 2>/dev/null)
+    if [[ -z "$xcode_path" ]] || [[ ! -d "$xcode_path" ]]; then
+      echo -e "${COLOR_YELLOW}⚠️  Xcode Command Line Tools not found${COLOR_RESET}"
+      echo ""
+      echo "Homebrew and many development tools require Xcode CLT."
+      echo "Install from Apple Developer:"
+      echo "  ${COLOR_BOLD}https://developer.apple.com/download/more/${COLOR_RESET}"
+      echo ""
+      echo "Or try: ${COLOR_BOLD}xcode-select --install${COLOR_RESET}"
+      echo ""
+    fi
+  fi
   
   # Build components in the REQUIRED ORDER (array order matters!)
   local -a selected_components
@@ -759,7 +785,7 @@ automated_setup() {
     selected_components+=("git")
   fi
   
-  if [[ "$OSA_SETUP_COCOAPODS" == "true" ]] && is_component_available "cocoapods"; then
+  if [[ "$OSA_SETUP_COCOAPODS" == "true" ]] && [[ "$OSA_SKIP_COCOAPODS" != "true" ]] && is_component_available "cocoapods"; then
     selected_components+=("cocoapods")
   fi
   
@@ -802,6 +828,9 @@ automated_setup() {
   echo "  1. Try it out: ${COLOR_BOLD}mise --version${COLOR_RESET}"
   echo "  2. Test in a new terminal (recommended): ${COLOR_BOLD}zsh${COLOR_RESET}"
   echo "  3. Happy coding! 🚀"
+  
+  echo ""
+  echo -e "${COLOR_BOLD}${COLOR_GREEN}✓ OSA setup completed successfully${COLOR_RESET}"
 }
 
 # Show help
@@ -835,6 +864,7 @@ ${COLOR_BOLD}OPTIONS:${COLOR_RESET}
   --local                 Skip global mise setup (only setup local configs)
   --disable-osa-snippets  Skip osa-snippets installation (enabled by default)
   --disable-git           Skip Git configuration (default: configure git)
+  --skip-cocoapods        Skip CocoaPods installation (useful for testing)
   --doctor                Validate installation and suggest fixes (no changes made)
   --report                Generate system report for bug reporting
   --report-json           Generate system report in JSON format
@@ -1002,6 +1032,14 @@ enable_minimal() {
   OSA_SETUP_OH_MY_ZSH=true
   OSA_SETUP_ZSH_PLUGINS=true
   OSA_SETUP_MISE=true
+  
+  # Disable all optional components
+  OSA_SETUP_GIT=false
+  OSA_SETUP_ANDROID=false
+  OSA_SETUP_COCOAPODS=false
+  OSA_SETUP_ITERM2=false
+  OSA_SETUP_VSCODE=false
+  OSA_SETUP_OSA_SNIPPETS=false
   
   # Enable homebrew on macOS
   if [[ "$OSA_IS_MACOS" == "true" ]]; then
@@ -1449,7 +1487,6 @@ HOOK_EOF
 # Main CLI logic
 main() {
   init_components
-  load_config
   
   # Parse arguments
   if [[ $# -eq 0 ]]; then
@@ -1534,6 +1571,10 @@ main() {
         ;;
       --disable-git)
         export OSA_SKIP_GIT_CONFIG=true
+        shift
+        ;;
+      --skip-cocoapods)
+        export OSA_SKIP_COCOAPODS=true
         shift
         ;;
       # Options that take arguments
@@ -1634,6 +1675,8 @@ main() {
       exit $?
       ;;
     -a|--auto)
+      # Load saved config for auto mode
+      load_config
       automated_setup
       exit $?
       ;;
