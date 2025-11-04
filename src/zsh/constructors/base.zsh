@@ -47,8 +47,9 @@ if [[ "${OSA_CONFIG_COMPONENTS_ANDROID}" == "true" ]]; then
   safe_source "$OSA_ZSH_PLUGINS/android-sdk.zsh"
 fi
 
-# OSA CLI runtime - exposes 'osa' command for quick access
-safe_source "$OSA_ZSH_ALIASES/osa.zsh"
+# OSA CLI runtime - exposes 'osa-setup' command for quick access
+# Noting that `osa` CLI is installed via osa-scripts repo and can run osa-setup by doing `osa setup`
+safe_source "$OSA_ZSH_ALIASES/osa-setup.zsh"
 
 # Set OSA_CONFIG to the OSA installation directory
 OSA_CONFIG="${0:A:h:h:h:h}"

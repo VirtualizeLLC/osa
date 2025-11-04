@@ -1,5 +1,5 @@
 {
-  "name": "@vllc/osa",
+  "name": "@virtualize/osa",
   "version": "1.0.0",
   "description": "Scalable and unified config across all linux platforms such as mac, linux, and WSL",
   "directories": {

@@ -61,3 +61,17 @@ app/src/main/res/drawable-xxxhdpi/__node_modules*
 app/src/main/res/drawable-xxxhdpi/__components*
 app/src/main/res/drawable-xxxhdpi/components_*
 app/src/main/res/drawable-xxxhdpi/node_modules_*
+
+
+# Yarn 4 (Berry)
+.yarn/*
+!.yarn/releases
+!.yarn/plugins
+!.yarn/sdks
+!.yarn/versions
+!.yarnrc.yml
+.pnp.*
+# optional cache/state ignores
+.yarn/cache
+.yarn/unplugged
+.yarn/install-state.gz

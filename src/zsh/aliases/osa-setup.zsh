@@ -11,8 +11,8 @@ if [[ -z "$OSA_REPO_PATH" ]]; then
 fi
 
 # Create osa wrapper function that handles 'osa open' specially
-osa() {
-  # Handle 'osa open' to open repo in editor
+osa-setup() {
+  # Handle 'osa-setup open' to open repo in editor
   if [[ "$1" == "open" ]]; then
     local real_repo=$(readlink -f "${OSA_REPO_PATH:?OSA_REPO_PATH not set}")
     local editor="${OSA_EDITOR:-code}"
