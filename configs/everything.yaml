@@ -19,6 +19,9 @@ components:
   android: true
   react_native: true
   node: true
+  # nvm/fnm deprecated — use mise for runtime management
+  ruby: true
+  java: true
   python: false
   vscode: true
   direnv: true

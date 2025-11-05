@@ -123,7 +123,7 @@ teardown() {
   local required_flags=(
     "symlinks" "oh_my_zsh" "zsh_plugins" "homebrew" "mise" "osa_snippets"
     "git" "android" "react_native" "cocoapods"
-    "node" "python" "ruby" "java" "nvm" "fnm"
+    "node" "python" "ruby" "java"
     "vscode" "direnv" "keychain" "ngrok" "mac_tools" "xcode" "egpu" "compression"
   )
   

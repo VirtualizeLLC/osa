@@ -65,7 +65,7 @@ teardown() {
   grep -q 'This will remove:' "$OSA_TEST_REPO_ROOT/osa-cli.zsh"
   grep -q '~/.osa symlink' "$OSA_TEST_REPO_ROOT/osa-cli.zsh"
   grep -q '~/.zshrc symlink' "$OSA_TEST_REPO_ROOT/osa-cli.zsh"
-  grep -q '~/.osaconfig' "$OSA_TEST_REPO_ROOT/osa-cli.zsh"
+  grep -q '~/.osa-config' "$OSA_TEST_REPO_ROOT/osa-cli.zsh"
 }
 
 # Backup Behavior
@@ -102,7 +102,7 @@ teardown() {
 
 @test "safely removes ~/.osaconfig" {
   # Verify config file cleanup
-  grep -q '\$HOME/.osaconfig' "$OSA_TEST_REPO_ROOT/osa-cli.zsh"
+  grep -q '\$HOME/.osa-config' "$OSA_TEST_REPO_ROOT/osa-cli.zsh"
 }
 
 @test "safely removes ~/.mise.toml if present" {

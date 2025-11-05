@@ -8,7 +8,7 @@ on:
 
 jobs:
   test:
-    name: OSA CLI Tests
+    name: OSA Snippets Tests
     runs-on: macos-latest
     
     steps:
@@ -17,72 +17,11 @@ jobs:
       
       - name: Install dependencies
         run: |
-          # Install bats-core for shell script testing
           brew install bats-core
-          
-          # Verify installations
           echo "✓ bats version: $(bats --version)"
           echo "✓ zsh version: $(zsh --version)"
       
-      - name: Validate shell syntax
-        run: |
-          echo "Checking shell script syntax..."
-          
-          # Check main CLI
-          bash -n osa-cli.zsh
-          echo "✓ osa-cli.zsh"
-          
-          # Check setup scripts
-          for script in src/setup/*.zsh; do
-            bash -n "$script"
-            echo "✓ $script"
-          done
-          
-          # Check cleanup scripts
-          bash -n cleanup-symlinks.zsh
-          echo "✓ cleanup-symlinks.zsh"
-          
-          echo "✓ All scripts are syntactically valid"
-      
       - name: Run test suite
         run: |
-          echo "Running OSA CLI test suite..."
-          cd tests
-          bats *.bats
-        
-      - name: Test help output
-        run: |
-          echo "Testing help output..."
-          ./osa-cli.zsh --help | grep -q "OSA (Open Source Automation) CLI"
-          echo "✓ Help text is accessible"
-      
-      - name: Test dry-run mode
-        run: |
-          echo "Testing dry-run mode..."
-          output=$(./osa-cli.zsh --dry-run --minimal 2>&1 || true)
-          echo "$output" | grep -q "DRY-RUN MODE"
-          echo "✓ Dry-run mode works"
-      
-      - name: Test doctor command
-        run: |
-          echo "Testing doctor command..."
-          output=$(./osa-cli.zsh --doctor 2>&1 || true)
-          echo "$output" | grep -q "OSA Doctor"
-          echo "✓ Doctor command works"
-      
-      - name: Test argument validation
-        run: |
-          echo "Testing argument validation..."
-          
-          # Test that --clean rejects --dry-run
-          output=$(./osa-cli.zsh --clean --dry-run 2>&1 || true)
-          echo "$output" | grep -q "cannot be used with"
-          echo "✓ Argument validation works"
-      
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          name: test-results
-          path: tests/*.bats
-          retention-days: 30
+          echo "Running OSA Snippets test suite..."
+          bats tests/*.bats

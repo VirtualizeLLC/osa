@@ -15,51 +15,51 @@ teardown() {
 # =============================
 
 @test "minimal config does not include cocoapods" {
-  local minimal_config="$OSA_TEST_REPO_ROOT/configs/minimal.json"
+  local minimal_config="$OSA_TEST_REPO_ROOT/configs/minimal.yaml"
   # Should not have cocoapods key in components
-  ! jq '.components.cocoapods' "$minimal_config" | grep -q true
+  ! yq eval '.components.cocoapods' "$minimal_config" | grep -q true
 }
 
 @test "react-native config includes cocoapods" {
-  local rn_config="$OSA_TEST_REPO_ROOT/configs/react-native.json"
+  local rn_config="$OSA_TEST_REPO_ROOT/configs/react-native.yaml"
   # Should have cocoapods enabled
-  jq '.components.cocoapods' "$rn_config" | grep -q true
+  yq eval '.components.cocoapods' "$rn_config" | grep -q true
 }
 
 @test "ios config includes cocoapods" {
-  local ios_config="$OSA_TEST_REPO_ROOT/configs/ios.json"
+  local ios_config="$OSA_TEST_REPO_ROOT/configs/ios.yaml"
   # Should have cocoapods enabled
-  jq '.components.cocoapods' "$ios_config" | grep -q true
+  yq eval '.components.cocoapods' "$ios_config" | grep -q true
 }
 
 @test "android config does not include cocoapods" {
-  local android_config="$OSA_TEST_REPO_ROOT/configs/android.json"
+  local android_config="$OSA_TEST_REPO_ROOT/configs/android.yaml"
   # Should not have cocoapods key in components
-  ! jq '.components.cocoapods' "$android_config" | grep -q true
+  ! yq eval '.components.cocoapods' "$android_config" | grep -q true
 }
 
 @test "macos config does not include cocoapods" {
-  local macos_config="$OSA_TEST_REPO_ROOT/configs/macos.json"
+  local macos_config="$OSA_TEST_REPO_ROOT/configs/macos.yaml"
   # Should not have cocoapods key in components
-  ! jq '.components.cocoapods' "$macos_config" | grep -q true
+  ! yq eval '.components.cocoapods' "$macos_config" | grep -q true
 }
 
 @test "backend config does not include cocoapods" {
-  local backend_config="$OSA_TEST_REPO_ROOT/configs/backend.json"
+  local backend_config="$OSA_TEST_REPO_ROOT/configs/backend.yaml"
   # Should not have cocoapods key in components
-  ! jq '.components.cocoapods' "$backend_config" | grep -q true
+  ! yq eval '.components.cocoapods' "$backend_config" | grep -q true
 }
 
 @test "web config does not include cocoapods" {
-  local web_config="$OSA_TEST_REPO_ROOT/configs/web.json"
+  local web_config="$OSA_TEST_REPO_ROOT/configs/web.yaml"
   # Should not have cocoapods key in components
-  ! jq '.components.cocoapods' "$web_config" | grep -q true
+  ! yq eval '.components.cocoapods' "$web_config" | grep -q true
 }
 
 @test "everything config includes cocoapods" {
-  local everything_config="$OSA_TEST_REPO_ROOT/configs/everything.json"
+  local everything_config="$OSA_TEST_REPO_ROOT/configs/everything.yaml"
   # Should have cocoapods enabled
-  jq '.components.cocoapods' "$everything_config" | grep -q true
+  yq eval '.components.cocoapods' "$everything_config" | grep -q true
 }
 
 # Enable Minimal Tests
@@ -71,70 +71,70 @@ teardown() {
   local configs_dir="$OSA_TEST_REPO_ROOT/configs"
   
   # Verify that if we run --minimal, cocoapods should be false
-  # This is tested by checking that minimal.json doesn't have cocoapods=true
-  ! jq '.components.cocoapods' "$configs_dir/minimal.json" | grep -q true
+  # This is tested by checking that minimal.yaml doesn't have cocoapods=true
+  ! yq eval '.components.cocoapods' "$configs_dir/minimal.yaml" | grep -q true
 }
 
 @test "enable_minimal sets OSA_SETUP_GIT=false" {
   # Minimal config should not have git
-  local minimal_config="$OSA_TEST_REPO_ROOT/configs/minimal.json"
+  local minimal_config="$OSA_TEST_REPO_ROOT/configs/minimal.yaml"
   
-  ! jq '.components.git' "$minimal_config" 2>/dev/null | grep -q true
+  ! yq eval '.components.git' "$minimal_config" 2>/dev/null | grep -q true
 }
 
 @test "enable_minimal sets OSA_SETUP_ANDROID=false" {
-  local minimal_config="$OSA_TEST_REPO_ROOT/configs/minimal.json"
+  local minimal_config="$OSA_TEST_REPO_ROOT/configs/minimal.yaml"
   
-  ! jq '.components.android' "$minimal_config" 2>/dev/null | grep -q true
+  ! yq eval '.components.android' "$minimal_config" 2>/dev/null | grep -q true
 }
 
 @test "enable_minimal sets OSA_SETUP_ITERM2=false" {
-  local minimal_config="$OSA_TEST_REPO_ROOT/configs/minimal.json"
+  local minimal_config="$OSA_TEST_REPO_ROOT/configs/minimal.yaml"
   
-  ! jq '.components.iterm2' "$minimal_config" 2>/dev/null | grep -q true
+  ! yq eval '.components.iterm2' "$minimal_config" 2>/dev/null | grep -q true
 }
 
 @test "enable_minimal sets OSA_SETUP_VSCODE=false" {
-  local minimal_config="$OSA_TEST_REPO_ROOT/configs/minimal.json"
+  local minimal_config="$OSA_TEST_REPO_ROOT/configs/minimal.yaml"
   
-  ! jq '.components.vscode' "$minimal_config" 2>/dev/null | grep -q true
+  ! yq eval '.components.vscode' "$minimal_config" 2>/dev/null | grep -q true
 }
 
 # Config Loading Tests
 # ====================
 
 @test "minimal config has cocoapods undefined or false" {
-  local minimal_config="$OSA_TEST_REPO_ROOT/configs/minimal.json"
-  local cocoapods=$(jq '.components.cocoapods' "$minimal_config" 2>/dev/null)
+  local minimal_config="$OSA_TEST_REPO_ROOT/configs/minimal.yaml"
+  local cocoapods=$(yq eval '.components.cocoapods' "$minimal_config" 2>/dev/null)
   
   # Should be null (undefined) or false
   [[ "$cocoapods" == "null" || "$cocoapods" == "false" ]]
 }
 
 @test "react-native config has cocoapods=true" {
-  local rn_config="$OSA_TEST_REPO_ROOT/configs/react-native.json"
-  local cocoapods=$(jq '.components.cocoapods' "$rn_config" 2>/dev/null)
+  local rn_config="$OSA_TEST_REPO_ROOT/configs/react-native.yaml"
+  local cocoapods=$(yq eval '.components.cocoapods' "$rn_config" 2>/dev/null)
   
   [[ "$cocoapods" == "true" ]]
 }
 
 @test "ios config has cocoapods=true" {
-  local ios_config="$OSA_TEST_REPO_ROOT/configs/ios.json"
-  local cocoapods=$(jq '.components.cocoapods' "$ios_config" 2>/dev/null)
+  local ios_config="$OSA_TEST_REPO_ROOT/configs/ios.yaml"
+  local cocoapods=$(yq eval '.components.cocoapods' "$ios_config" 2>/dev/null)
   
   [[ "$cocoapods" == "true" ]]
 }
 
 @test "android config has cocoapods undefined or false" {
-  local android_config="$OSA_TEST_REPO_ROOT/configs/android.json"
-  local cocoapods=$(jq '.components.cocoapods' "$android_config" 2>/dev/null)
+  local android_config="$OSA_TEST_REPO_ROOT/configs/android.yaml"
+  local cocoapods=$(yq eval '.components.cocoapods' "$android_config" 2>/dev/null)
   
   [[ "$cocoapods" == "null" || "$cocoapods" == "false" ]]
 }
 
 @test "macos config has cocoapods undefined or false" {
-  local macos_config="$OSA_TEST_REPO_ROOT/configs/macos.json"
-  local cocoapods=$(jq '.components.cocoapods' "$macos_config" 2>/dev/null)
+  local macos_config="$OSA_TEST_REPO_ROOT/configs/macos.yaml"
+  local cocoapods=$(yq eval '.components.cocoapods' "$macos_config" 2>/dev/null)
   
   [[ "$cocoapods" == "null" || "$cocoapods" == "false" ]]
 }
@@ -146,9 +146,9 @@ teardown() {
   local configs_dir="$OSA_TEST_REPO_ROOT/configs"
   local invalid_count=0
   
-  for config in "$configs_dir"/*.json; do
-    if ! jq empty "$config" 2>/dev/null; then
-      echo "Invalid JSON: $config"
+  for config in "$configs_dir"/*.yaml; do
+    if ! yq eval '.' "$config" > /dev/null 2>/dev/null; then
+      echo "Invalid YAML: $config"
       invalid_count=$((invalid_count + 1))
     fi
   done
@@ -159,12 +159,12 @@ teardown() {
 @test "all configs have required fields" {
   local configs_dir="$OSA_TEST_REPO_ROOT/configs"
   
-  for config in "$configs_dir"/*.json; do
+  for config in "$configs_dir"/*.yaml; do
     # Check for version, description, components, runtimes
-    jq -e '.version' "$config" > /dev/null || { echo "Missing version in $config"; return 1; }
-    jq -e '.description' "$config" > /dev/null || { echo "Missing description in $config"; return 1; }
-    jq -e '.components' "$config" > /dev/null || { echo "Missing components in $config"; return 1; }
-    jq -e '.runtimes' "$config" > /dev/null || { echo "Missing runtimes in $config"; return 1; }
+    yq eval '.version' "$config" > /dev/null || { echo "Missing version in $config"; return 1; }
+    yq eval '.description' "$config" > /dev/null || { echo "Missing description in $config"; return 1; }
+    yq eval '.components' "$config" > /dev/null || { echo "Missing components in $config"; return 1; }
+    yq eval '.runtimes' "$config" > /dev/null || { echo "Missing runtimes in $config"; return 1; }
   done
 }
 
@@ -172,8 +172,8 @@ teardown() {
   # Cocoapods should be boolean, not an object
   local configs_dir="$OSA_TEST_REPO_ROOT/configs"
   
-  for config in "$configs_dir"/*.json; do
-    local cocoapods_value=$(jq '.components.cocoapods' "$config" 2>/dev/null)
+  for config in "$configs_dir"/*.yaml; do
+    local cocoapods_value=$(yq eval '.components.cocoapods' "$config" 2>/dev/null)
     
     # If cocoapods exists, it should be true or false (not an object starting with {)
     if [[ "$cocoapods_value" == "{" ]]; then
@@ -195,21 +195,18 @@ teardown() {
 
 @test "config file defaults all undefined components to false" {
   # When a config doesn't mention a component, jq should return false
-  local test_minimal="/tmp/test-minimal-cocoapods.json"
+  local test_minimal="/tmp/test-minimal-cocoapods.yaml"
   cat > "$test_minimal" << 'EOF'
-{
-  "version": "1.0",
-  "description": "Test",
-  "components": {
-    "symlinks": true,
-    "oh_my_zsh": true,
-    "zsh_plugins": true
-  },
-  "runtimes": {}
-}
+version: "1.0"
+description: "Test"
+components:
+  symlinks: true
+  oh_my_zsh: true
+  zsh_plugins: true
+runtimes: {}
 EOF
 
-  local result=$(jq -r '.components.cocoapods // false' "$test_minimal")
+  local result=$(yq eval '.components.cocoapods // false' "$test_minimal")
   [[ "$result" == "false" ]]
   
   rm -f "$test_minimal"

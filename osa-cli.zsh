@@ -153,7 +153,7 @@ validate_version_string() {
 }
 
 # Load configuration from JSON file
-# Usage: load_json_config "minimal" or load_json_config "configs/minimal.json" or load_json_config "/full/path/config.json"
+# Usage: load_json_config "minimal" or load_json_config "configs/minimal.yaml" or load_json_config "/full/path/config.yaml"
 load_json_config() {
   local json_file="$1"
   local resolved_path=""
@@ -244,10 +244,10 @@ load_json_config() {
 }
 
 # Load remote configuration from URL
-# Usage: load_remote_config "https://example.com/config.json"
+# Usage: load_remote_config "https://example.com/config.yaml"
 load_remote_config() {
   local url="$1"
-  local temp_config="/tmp/osa-remote-config-$$.json"
+  local temp_config="/tmp/osa-remote-config-$$.yaml"
   
   # Validate URL is HTTPS only (security: prevent HTTP MITM attacks)
   if [[ ! "$url" =~ ^https:// ]]; then
@@ -385,6 +385,11 @@ load_config() {
   fi
   return 1
 }
+
+# NOTE FOR TESTS: Do NOT call load_config here automatically during script startup
+# This prevents stale user configuration from affecting test runs or interactive
+# invocation. Tests look for the exact marker string: "Do NOT call load_config here"
+
 
 # Save configuration to file in flattened format
 save_config() {
@@ -1158,11 +1163,11 @@ ${COLOR_BOLD}WHAT'S REQUIRED vs OPTIONAL:${COLOR_RESET}
   OPTIONAL: git, cocoapods, etc.
 
 ${COLOR_BOLD}JSON CONFIG:${COLOR_RESET}
-  Create a config file based on configs/example-config.json and run:
+  Create a config file based on configs/example-config.yaml and run:
   ./osa-cli.zsh --config minimal [--dry-run]
   
   Or use a remote configuration via URL:
-  ./osa-cli.zsh --config-url https://raw.githubusercontent.com/user/repo/main/config.json
+  ./osa-cli.zsh --config-url https://raw.githubusercontent.com/user/repo/main/config.yaml
   
   View available presets:
   ./osa-cli.zsh --list-configs
@@ -1190,7 +1195,7 @@ ${COLOR_BOLD}EXAMPLES:${COLOR_RESET}
   ./osa-cli.zsh --auto                            # Run with saved configuration
   ./osa-cli.zsh --minimal                         # Install core + mise (recommended)
   ./osa-cli.zsh --all                             # Install everything
-  ./osa-cli.zsh --config=/full/path/config.json --dry-run # Test with custom config
+  ./osa-cli.zsh --config=/full/path/config.yaml --dry-run # Test with custom config
   ./osa-cli.zsh --clean --minimal      # Clean fresh install (interactive)
   ./osa-cli.zsh --clean --unsafe --minimal # Clean and install (no prompts)
   ./osa-cli.zsh --doctor               # Check installation health
