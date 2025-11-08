@@ -3,6 +3,8 @@
 
 # Get the repo root (parent of tests directory)
 OSA_TEST_REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# Export repo path for tests that expect OSA_REPO_PATH to be set
+export OSA_REPO_PATH="$OSA_TEST_REPO_ROOT"
 
 # Create a temporary test directory for each test
 export TEST_TEMP_DIR=""
@@ -19,6 +21,8 @@ setup_test_env() {
   
   # Export for use in subshells
   export TEST_TEMP_DIR TEST_LOG MOCK_HOME
+  # Ensure OSA_REPO_PATH is available inside test environment
+  export OSA_REPO_PATH="$OSA_TEST_REPO_ROOT"
 }
 
 # Cleanup test environment
