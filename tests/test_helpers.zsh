@@ -53,15 +53,19 @@ flatten_yaml_to_env_vars() {
     echo -e "${COLOR_RED}✗${COLOR_RESET} Config missing 'profile' field"
     return 1
   fi
-  
-  typeset -g "OSA_CONFIG_PROFILE=$profile"
+
+  # Use eval+export for dynamic variable names (bash-friendly)
+  OSA_CONFIG_PROFILE="$profile"
+  export OSA_CONFIG_PROFILE
   
   # Flatten components section
   local -a component_keys=(symlinks oh_my_zsh zsh_plugins homebrew mise osa_snippets git android iterm2 vscode cocoapods)
   for key in "${component_keys[@]}"; do
-    local value=$(yq eval ".components.${key} // false" "$resolved_path" 2>/dev/null)
-    local var_name="OSA_CONFIG_COMPONENTS_$(echo $key | tr a-z A-Z | tr '-' '_')"
-    typeset -g "$var_name=$value"
+  local value=$(yq eval ".components.${key} // false" "$resolved_path" 2>/dev/null)
+  local var_name="OSA_CONFIG_COMPONENTS_$(echo $key | tr a-z A-Z | tr '-' '_')"
+  # Assign and export dynamic variable name in a bash-compatible way
+  eval "${var_name}='${value}'"
+  eval "export ${var_name}"
   done
   
   # Flatten runtimes section
@@ -70,11 +74,13 @@ flatten_yaml_to_env_vars() {
     local enabled=$(yq eval ".runtimes.${runtime}.enabled // false" "$resolved_path" 2>/dev/null)
     local version=$(yq eval ".runtimes.${runtime}.version // \"latest\"" "$resolved_path" 2>/dev/null)
     
-    local enabled_var="OSA_CONFIG_RUNTIMES_$(echo $runtime | tr a-z A-Z)_ENABLED"
-    local version_var="OSA_CONFIG_RUNTIMES_$(echo $runtime | tr a-z A-Z)_VERSION"
-    
-    typeset -g "$enabled_var=$enabled"
-    typeset -g "$version_var=$version"
+  local enabled_var="OSA_CONFIG_RUNTIMES_$(echo $runtime | tr a-z A-Z)_ENABLED"
+  local version_var="OSA_CONFIG_RUNTIMES_$(echo $runtime | tr a-z A-Z)_VERSION"
+
+  eval "${enabled_var}='${enabled}'"
+  eval "export ${enabled_var}"
+  eval "${version_var}='${version}'"
+  eval "export ${version_var}"
   done
   
   # Flatten snippets section
@@ -87,8 +93,9 @@ flatten_yaml_to_env_vars() {
       
       local repo_upper=$(echo "$repo" | tr a-z A-Z | tr '-' '_')
       local enabled=$(yq eval ".snippets.${repo}.enabled" "$resolved_path" 2>/dev/null)
-      local enabled_var="OSA_CONFIG_SNIPPETS_${repo_upper}_ENABLED"
-      typeset -g "$enabled_var=$enabled"
+  local enabled_var="OSA_CONFIG_SNIPPETS_${repo_upper}_ENABLED"
+  eval "${enabled_var}='${enabled}'"
+  eval "export ${enabled_var}"
       
       # Get features array
       local features=$(yq eval ".snippets.${repo}.features" "$resolved_path" 2>/dev/null)
@@ -103,8 +110,9 @@ flatten_yaml_to_env_vars() {
       while IFS= read -r feature; do
         [[ -z "$feature" ]] && continue
         local feature_upper=$(echo "$feature" | tr a-z A-Z | tr '-' '_')
-        local feature_var="OSA_CONFIG_SNIPPETS_${repo_upper}_${feature_upper}"
-        typeset -g "$feature_var=true"
+  local feature_var="OSA_CONFIG_SNIPPETS_${repo_upper}_${feature_upper}"
+  eval "${feature_var}=true"
+  eval "export ${feature_var}"
       done <<< "$feature_list"
     done <<< "$snippet_repos"
   fi
