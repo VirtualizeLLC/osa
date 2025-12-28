@@ -211,13 +211,13 @@ load_json_config() {
   local -a component_keys=(symlinks oh_my_zsh zsh_plugins homebrew mise osa_snippets git android iterm2 vscode cocoapods depot_tools)
   
   for key in "${component_keys[@]}"; do
-    local enabled=$(yq eval ".components.${key} // false" "$resolved_path" 2>/dev/null)
+    local enabled=$(yq eval ".components.${key} // false" "$resolved_path" 2>/dev/null | tr -d '\n')
     local var_name="OSA_SETUP_$(normalize_key "$key")"
     
     if [[ "$enabled" == "true" ]]; then
-      typeset -g "$var_name=true"
+      typeset -gx "$var_name=true"
     else
-      typeset -g "$var_name=false"
+      typeset -gx "$var_name=false"
     fi
   done
   
@@ -225,8 +225,8 @@ load_json_config() {
   local -a runtime_keys=(node python ruby java rust go deno elixir erlang)
   
   for runtime in "${runtime_keys[@]}"; do
-    local enabled=$(yq eval ".runtimes.${runtime}.enabled // false" "$resolved_path" 2>/dev/null)
-    local version=$(yq eval ".runtimes.${runtime}.version // \"latest\"" "$resolved_path" 2>/dev/null)
+    local enabled=$(yq eval ".runtimes.${runtime}.enabled // false" "$resolved_path" 2>/dev/null | tr -d '\n')
+    local version=$(yq eval ".runtimes.${runtime}.version // \"latest\"" "$resolved_path" 2>/dev/null | tr -d '\n')
     
     if [[ "$enabled" == "true" ]]; then
       # Validate version string contains only safe characters
@@ -356,7 +356,7 @@ init_components() {
   # Development tools with install scripts
   register_component "git" "Configure Git (version control)" "all" "src/setup/git.zsh"
   register_component "cocoapods" "Install CocoaPods for iOS development" "macos" "src/setup/install-cocoapods.zsh"
-  register_component "depot-tools" "Install depot_tools (Chromium development utilities)" "all" "src/setup/install-depot-tools.zsh"
+  register_component "depot_tools" "Install depot_tools (Chromium development utilities)" "all" "src/setup/install-depot-tools.zsh"
 }
 
 # Check if component is available for current platform
@@ -1058,6 +1058,10 @@ automated_setup() {
     selected_components+=("cocoapods")
   fi
   
+  if [[ "$OSA_SETUP_DEPOT_TOOLS" == "true" ]]; then
+    selected_components+=("depot_tools")
+  fi
+  
   if [[ ${#selected_components[@]} -eq 0 ]]; then
     echo -e "${COLOR_YELLOW}No components enabled in configuration.${COLOR_RESET}"
     echo "Run with --interactive to select components."
@@ -1311,6 +1315,7 @@ enable_minimal() {
   OSA_SETUP_ITERM2=false
   OSA_SETUP_VSCODE=false
   OSA_SETUP_OSA_SNIPPETS=false
+  OSA_SETUP_DEPOT_TOOLS=false
   
   # Enable homebrew on macOS
   if [[ "$OSA_IS_MACOS" == "true" ]]; then
@@ -1957,7 +1962,11 @@ main() {
       ;;
     -a|--auto)
       # Load saved config for auto mode
-      load_config
+      if ! load_config; then
+        echo -e "${COLOR_YELLOW}⚠${COLOR_RESET} No saved configuration found at: $OSA_CONFIG_FILE"
+        echo "Run with --interactive to create a configuration first"
+        exit 1
+      fi
       automated_setup
       exit $?
       ;;

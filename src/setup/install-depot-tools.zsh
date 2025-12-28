@@ -4,9 +4,9 @@
 
 echo "Installing depot_tools (Chromium development utilities)..."
 
-# Configuration
+# Configuration - install to external-libs like other tools
 DEPOT_TOOLS_REPO="${DEPOT_TOOLS_REPO:-https://chromium.googlesource.com/chromium/tools/depot_tools.git}"
-DEPOT_TOOLS_DIR="${DEPOT_TOOLS_DIR:-$HOME/.depot_tools}"
+DEPOT_TOOLS_DIR="${DEPOT_TOOLS_DIR:-$OSA_REPO_PATH/external-libs/depot_tools}"
 
 # Create parent directory if needed
 mkdir -p "$(dirname "$DEPOT_TOOLS_DIR")"
@@ -31,9 +31,8 @@ else
   fi
 fi
 
-# Add depot_tools to PATH via shell configuration
-# This should be sourced during shell initialization
-export PATH="$DEPOT_TOOLS_DIR:$PATH"
+# Note: depot_tools will be added to PATH via plugin-init/depot-tools.zsh
+# which sources the symlink created by initialize-repo-symlinks.zsh
 
 echo "✓ depot_tools installed at: $DEPOT_TOOLS_DIR"
 echo ""

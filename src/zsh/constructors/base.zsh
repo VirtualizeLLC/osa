@@ -47,6 +47,9 @@ if [[ "${OSA_CONFIG_COMPONENTS_ANDROID}" == "true" ]]; then
   safe_source "$OSA_ZSH_PLUGINS/android-sdk.zsh"
 fi
 
+# Depot tools for Chromium development
+safe_source "$OSA_ZSH_PLUGINS/depot-tools.zsh"
+
 # OSA CLI runtime - exposes 'osa-setup' command for quick access
 # Noting that `osa` CLI is installed via osa-scripts repo and can run osa-setup by doing `osa setup`
 safe_source "$OSA_ZSH_ALIASES/osa-setup.zsh"
