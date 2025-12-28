@@ -208,7 +208,7 @@ load_json_config() {
   
   # For backward compatibility during installation, also set OSA_SETUP_* variables
   # These are used by run_component() to determine what to install
-  local -a component_keys=(symlinks oh_my_zsh zsh_plugins homebrew mise osa_snippets git android iterm2 vscode cocoapods)
+  local -a component_keys=(symlinks oh_my_zsh zsh_plugins homebrew mise osa_snippets git android iterm2 vscode cocoapods depot_tools)
   
   for key in "${component_keys[@]}"; do
     local enabled=$(yq eval ".components.${key} // false" "$resolved_path" 2>/dev/null)
@@ -356,6 +356,7 @@ init_components() {
   # Development tools with install scripts
   register_component "git" "Configure Git (version control)" "all" "src/setup/git.zsh"
   register_component "cocoapods" "Install CocoaPods for iOS development" "macos" "src/setup/install-cocoapods.zsh"
+  register_component "depot-tools" "Install depot_tools (Chromium development utilities)" "all" "src/setup/install-depot-tools.zsh"
 }
 
 # Check if component is available for current platform
@@ -435,7 +436,7 @@ save_config() {
     # If no OSA_CONFIG_* variables exist (interactive mode), convert OSA_SETUP_* to OSA_CONFIG_*
     if [[ -z "$(echo $all_vars | grep '^OSA_CONFIG_')" ]]; then
       # Convert OSA_SETUP_* component flags to OSA_CONFIG_COMPONENTS_*
-      local -a component_keys=(symlinks homebrew oh_my_zsh zsh_plugins mise osa_snippets git android iterm2 vscode cocoapods)
+      local -a component_keys=(symlinks homebrew oh_my_zsh zsh_plugins mise osa_snippets git android iterm2 vscode cocoapods depot_tools)
       for key in "${component_keys[@]}"; do
         local var_name="OSA_SETUP_$(echo $key | tr a-z A-Z | tr '-' '_')"
         local value="${(P)var_name}"
@@ -708,7 +709,7 @@ validate_config() {
   
   # Show enabled components
   echo -e "${COLOR_BOLD}Setup Components (to be installed):${COLOR_RESET}"
-  local -a component_keys=(symlinks oh_my_zsh zsh_plugins homebrew mise osa_snippets git cocoapods)
+  local -a component_keys=(symlinks oh_my_zsh zsh_plugins homebrew mise osa_snippets git cocoapods depot_tools)
   for key in "${component_keys[@]}"; do
     local enabled=$(yq eval ".components.${key} // false" "$resolved_path" 2>/dev/null)
     if [[ "$enabled" == "true" ]]; then

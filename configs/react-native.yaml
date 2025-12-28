@@ -14,6 +14,7 @@ components:
   mise: true
   git: true
   cocoapods: true  # Required for React Native iOS
+  depot_tools: false
   
   # Snippets runtime flags
   android: true  # React Native Android support

@@ -14,6 +14,7 @@ components:
   mise: true
   git: true
   cocoapods: false  # Not needed for Android
+  depot_tools: false
   
   # Snippets runtime flags
   android: true  # Android development tools
