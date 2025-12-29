@@ -9,10 +9,10 @@ if [[ -d "$DEPOT_TOOLS_HOME" ]]; then
   export PATH="$DEPOT_TOOLS_HOME:$PATH"
 else
   # Inform user depot_tools is not installed
-  if [[ -z "$DEPOT_TOOLS_SKIP_INIT_MESSAGE" ]]; then
+  if [[ -z "$DEPOT_TOOLS_INIT_MESSAGE_SHOWN" ]]; then
     echo "Note: depot_tools not found at: $DEPOT_TOOLS_HOME"
-    echo "Install with: ./osa-cli.zsh --enable depot_tools"
-    echo "Or manually: git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git $DEPOT_TOOLS_HOME"
-    export DEPOT_TOOLS_SKIP_INIT_MESSAGE=1
+    echo "Install with: ./osa-cli.zsh --enable depot-tools"
+    echo "Or manually: git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git ~/.depot_tools"
+    export DEPOT_TOOLS_INIT_MESSAGE_SHOWN=1
   fi
 fi
