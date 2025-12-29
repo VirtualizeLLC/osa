@@ -2,6 +2,28 @@
 # Install/update depot_tools - Chromium development utilities
 # https://commondatastorage.googleapis.com/chrome-infra-docs/flat/depot_tools/docs/html/depot_tools_tutorial.html
 
+# Platform detection
+local os_type=$(uname -s)
+
+# Check if running on macOS
+if [[ "$os_type" == "Darwin" ]]; then
+  echo "⚠️  depot_tools is primarily designed for Linux development (especially Chromium builds)"
+  echo ""
+  echo "⚠️  macOS Support: Limited and not recommended"
+  echo "   - depot_tools works better on Linux for Chromium development"
+  echo "   - Consider using a Linux machine or WSL 2 for optimal Chromium development"
+  echo "   - If you need depot_tools on macOS for specific workflows, run on Linux instead"
+  echo ""
+  echo "To continue with Chromium development on this macOS machine:"
+  echo "  1. Set up a Linux VM or use WSL 2 (recommended)"
+  echo "  2. Run depot_tools installation on that Linux environment"
+  echo ""
+  echo "For more information on Chromium development:"
+  echo "  https://chromium.googlesource.com/chromium/src/+/refs/heads/main/docs/mac_build_instructions.md"
+  echo ""
+  return 0
+fi
+
 echo "Installing depot_tools (Chromium development utilities)..."
 
 # Configuration - install to external-libs like other tools

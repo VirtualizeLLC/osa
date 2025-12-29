@@ -30,6 +30,36 @@ teardown() {
   unset GIT_CLONE_CALLED GIT_PULL_CALLED GIT_CLONE_REPO GIT_CLONE_DIR
 }
 
+# Platform Detection Tests
+# =========================
+
+@test "depot_tools: detects platform with uname -s" {
+  # Verify platform detection is performed
+  grep -q 'uname -s' "$OSA_REPO_PATH/src/setup/install-depot-tools.zsh"
+  echo "✓ Platform detection via uname verified"
+}
+
+@test "depot_tools: warns on macOS and exits gracefully" {
+  # Verify macOS check
+  grep -q 'Darwin' "$OSA_REPO_PATH/src/setup/install-depot-tools.zsh"
+  grep -q 'depot_tools is primarily designed for Linux' "$OSA_REPO_PATH/src/setup/install-depot-tools.zsh"
+  echo "✓ macOS warning message verified"
+}
+
+@test "depot_tools: provides macOS alternatives guidance" {
+  # Verify helpful guidance for macOS users
+  grep -q 'Linux VM or use WSL 2' "$OSA_REPO_PATH/src/setup/install-depot-tools.zsh"
+  echo "✓ macOS alternatives guidance provided"
+}
+
+@test "depot_tools: returns gracefully on macOS without error" {
+  # Verify that return 0 is used for macOS
+  local script="$OSA_REPO_PATH/src/setup/install-depot-tools.zsh"
+  # Check that Darwin check contains return 0
+  grep -A 20 'Darwin' "$script" | grep -q 'return 0'
+  echo "✓ Graceful exit on macOS verified"
+}
+
 # Directory Structure Tests
 # =========================
 
