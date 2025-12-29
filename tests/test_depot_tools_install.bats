@@ -63,7 +63,7 @@ teardown() {
   touch "$DEPOT_TOOLS_DIR/.git/HEAD"
   
   # Verify the check exists in the script
-  grep -q '\[[ -d "$DEPOT_TOOLS_DIR/.git" ]]' "$OSA_REPO_PATH/src/setup/install-depot-tools.zsh"
+  grep -q '[[ -d "$DEPOT_TOOLS_DIR/.git" ]]' "$OSA_REPO_PATH/src/setup/install-depot-tools.zsh"
   
   # Verify directory detection works
   [[ -d "$DEPOT_TOOLS_DIR/.git" ]]
