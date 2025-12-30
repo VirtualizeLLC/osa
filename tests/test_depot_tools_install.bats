@@ -249,9 +249,41 @@ teardown() {
   echo "✓ Correct zsh shebang verified"
 }
 
-@test "depot_tools: script file exists and is readable" {
-  # Verify the script exists and is accessible
-  [[ -f "$OSA_REPO_PATH/src/setup/install-depot-tools.zsh" ]]
-  [[ -r "$OSA_REPO_PATH/src/setup/install-depot-tools.zsh" ]]
-  echo "✓ Script file accessibility verified"
+@test "depot_tools: plugin is conditionally loaded in base.zsh" {
+  # Verify the conditional loading is implemented
+  grep -q 'OSA_CONFIG_COMPONENTS_DEPOT_TOOLS' "$OSA_REPO_PATH/src/zsh/constructors/base.zsh"
+  echo "✓ Conditional loading in base.zsh verified"
+}
+
+@test "depot_tools: plugin init follows android-sdk pattern" {
+  # Verify consistent conditional loading pattern with android-sdk
+  local base_file="$OSA_REPO_PATH/src/zsh/constructors/base.zsh"
+  
+  # Check both plugins use same conditional pattern
+  grep -q 'if \[\[ "${OSA_CONFIG_COMPONENTS_ANDROID}" == "true" \]\]' "$base_file"
+  grep -q 'if \[\[ "${OSA_CONFIG_COMPONENTS_DEPOT_TOOLS}" == "true" \]\]' "$base_file"
+  
+  echo "✓ depot-tools loading pattern consistent with android-sdk"
+}
+
+# Plugin Initialization Tests
+# ===========================
+
+@test "depot_tools: plugin adds to PATH when directory exists" {
+  # Verify the plugin adds depot_tools to PATH
+  grep -q 'export PATH="$DEPOT_TOOLS_HOME:\$PATH"' "$OSA_REPO_PATH/src/zsh/plugin-init/depot-tools.zsh"
+  echo "✓ PATH configuration verified"
+}
+
+@test "depot_tools: plugin provides helpful message when not installed" {
+  # Verify informative message for missing installation
+  grep -q 'depot_tools not found' "$OSA_REPO_PATH/src/zsh/plugin-init/depot-tools.zsh"
+  grep -q 'Install with' "$OSA_REPO_PATH/src/zsh/plugin-init/depot-tools.zsh"
+  echo "✓ Missing installation message verified"
+}
+
+@test "depot_tools: plugin sets DEPOT_TOOLS_HOME with default value" {
+  # Verify environment variable is set with fallback
+  grep -q 'DEPOT_TOOLS_HOME=.*external-libs/depot_tools' "$OSA_REPO_PATH/src/zsh/plugin-init/depot-tools.zsh"
+  echo "✓ DEPOT_TOOLS_HOME configuration verified"
 }
