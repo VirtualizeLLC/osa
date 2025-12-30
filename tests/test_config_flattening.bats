@@ -112,7 +112,7 @@ teardown() {
   flatten_yaml_to_env_vars "$OSA_CLI_DIR/configs/android.yaml"
   
   [[ "$OSA_CONFIG_SNIPPETS_OSASNIPPETS_ANDROID" == "true" ]]
-  [[ -z "$OSA_CONFIG_SNIPPETS_OSASNIPPETS_KEYCHAIN" ]]  # Not in android profile features
+  [[ "$OSA_CONFIG_SNIPPETS_OSASNIPPETS_KEYCHAIN" == "true" ]]  # Enabled for keychain features in android
 }
 
 @test "web profile has multiple feature flags" {
