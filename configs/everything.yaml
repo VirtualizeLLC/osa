@@ -73,3 +73,36 @@ snippets:
       - mac_tools
       - direnv
       - vscode
+
+# macOS duti configuration: set default apps for file types
+# Pattern: file_extension: bundle_id_or_name
+# When enabled via components, duti will be installed and these overrides applied
+duti:
+  # Archive handlers - Keka for fast extraction
+  .zip: com.aone.keka
+  .7z: com.aone.keka
+  .rar: com.aone.keka
+  # Code/text editors - VSCode
+  .zsh: com.microsoft.VSCode
+  .sh: com.microsoft.VSCode
+  .js: com.microsoft.VSCode
+  .jsx: com.microsoft.VSCode
+  .ts: com.microsoft.VSCode
+  .tsx: com.microsoft.VSCode
+  .cjs: com.microsoft.VSCode
+  .mjs: com.microsoft.VSCode
+  .json: com.microsoft.VSCode
+  .json5: com.microsoft.VSCode
+  .md: com.microsoft.VSCode
+  .txt: com.microsoft.VSCode
+  .java: com.microsoft.VSCode
+  .kt: com.microsoft.VSCode
+  .py: com.microsoft.VSCode
+  .lock: com.microsoft.VSCode
+  .rb: com.microsoft.VSCode
+  .yml: com.microsoft.VSCode
+  .yaml: com.microsoft.VSCode
+  .mc: com.microsoft.VSCode
+  .jungle: com.microsoft.VSCode
+  .svg: com.microsoft.VSCode
+  Podfile: com.microsoft.VSCode

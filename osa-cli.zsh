@@ -127,6 +127,22 @@ flatten_yaml_to_env_vars() {
     done <<< "$snippet_repos"
   fi
   
+  # Flatten duti section (macOS default app overrides)
+  # Pattern: .extension: bundle_id
+  local duti_overrides=$(yq eval '.duti | keys | .[]' "$resolved_path" 2>/dev/null)
+  
+  if [[ -n "$duti_overrides" ]]; then
+    while IFS= read -r extension; do
+      [[ -z "$extension" ]] && continue
+      
+      local bundle_id=$(yq eval ".duti.\"${extension}\"" "$resolved_path" 2>/dev/null | tr -d '\n')
+      if [[ -n "$bundle_id" && "$bundle_id" != "null" ]]; then
+        local ext_var="OSA_CONFIG_DUTI_${extension//./}_BUNDLE_ID"
+        typeset -gx "${ext_var}=${bundle_id}"
+      fi
+    done <<< "$duti_overrides"
+  fi
+  
   return 0
 }
 
@@ -208,7 +224,7 @@ load_json_config() {
   
   # For backward compatibility during installation, also set OSA_SETUP_* variables
   # These are used by run_component() to determine what to install
-  local -a component_keys=(symlinks oh_my_zsh zsh_plugins homebrew mise osa_snippets git android iterm2 vscode cocoapods depot_tools)
+  local -a component_keys=(symlinks oh_my_zsh zsh_plugins homebrew mise osa_snippets git android iterm2 vscode cocoapods depot_tools 7zip duti)
   
   for key in "${component_keys[@]}"; do
     local enabled=$(yq eval ".components.${key} // false" "$resolved_path" 2>/dev/null | tr -d '\n')
@@ -357,6 +373,8 @@ init_components() {
   register_component "git" "Configure Git (version control)" "all" "src/setup/git.zsh"
   register_component "cocoapods" "Install CocoaPods for iOS development" "macos" "src/setup/install-cocoapods.zsh"
   register_component "depot_tools" "Install depot_tools (Chromium development utilities)" "all" "src/setup/install-depot-tools.zsh"
+  register_component "7zip" "Install 7zip (fast multi-threaded archive extraction for macOS)" "macos" "src/setup/install-7zip.zsh"
+  register_component "duti" "Install duti (macOS default app manager)" "macos" "src/setup/install-duti.zsh"
 }
 
 # Check if component is available for current platform
@@ -436,7 +454,7 @@ save_config() {
     # If no OSA_CONFIG_* variables exist (interactive mode), convert OSA_SETUP_* to OSA_CONFIG_*
     if [[ -z "$(echo $all_vars | grep '^OSA_CONFIG_')" ]]; then
       # Convert OSA_SETUP_* component flags to OSA_CONFIG_COMPONENTS_*
-      local -a component_keys=(symlinks homebrew oh_my_zsh zsh_plugins mise osa_snippets git android iterm2 vscode cocoapods depot_tools)
+      local -a component_keys=(symlinks homebrew oh_my_zsh zsh_plugins mise osa_snippets git android iterm2 vscode cocoapods depot_tools 7zip duti)
       for key in "${component_keys[@]}"; do
         local var_name="OSA_SETUP_$(echo $key | tr a-z A-Z | tr '-' '_')"
         local value="${(P)var_name}"
@@ -709,7 +727,7 @@ validate_config() {
   
   # Show enabled components
   echo -e "${COLOR_BOLD}Setup Components (to be installed):${COLOR_RESET}"
-  local -a component_keys=(symlinks oh_my_zsh zsh_plugins homebrew mise osa_snippets git cocoapods depot_tools)
+  local -a component_keys=(symlinks oh_my_zsh zsh_plugins homebrew mise osa_snippets git cocoapods depot_tools 7zip duti)
   for key in "${component_keys[@]}"; do
     local enabled=$(yq eval ".components.${key} // false" "$resolved_path" 2>/dev/null)
     if [[ "$enabled" == "true" ]]; then
@@ -1062,6 +1080,10 @@ automated_setup() {
     selected_components+=("depot_tools")
   fi
   
+  if [[ "$OSA_SETUP_DUTI" == "true" ]]; then
+    selected_components+=("duti")
+  fi
+  
   if [[ ${#selected_components[@]} -eq 0 ]]; then
     echo -e "${COLOR_YELLOW}No components enabled in configuration.${COLOR_RESET}"
     echo "Run with --interactive to select components."
@@ -1149,6 +1171,12 @@ ${COLOR_BOLD}SECURITY:${COLOR_RESET}
   --scan-secrets          Scan constructors for hardcoded secrets/credentials
   --migrate-secrets       Interactive wizard to move secrets to secure storage
   --setup-git-hook        Install pre-commit hook to prevent secret commits
+
+${COLOR_BOLD}MACOS TOOLS:${COLOR_RESET}
+  --xcode-init            Initialize Xcode (accept license, run first-launch setup)
+                          Requires: Full Xcode.app installed (not just Command Line Tools)
+                          Tracks initialization state in ~/.osa/.xcode-initialized
+                          Usage: ./osa-cli.zsh --xcode-init
 
 ${COLOR_BOLD}RUNTIME COMMANDS (available as 'osa' in shell):${COLOR_RESET}
   osa open                Open OSA repository in editor (default: VS Code)
@@ -1316,6 +1344,8 @@ enable_minimal() {
   OSA_SETUP_VSCODE=false
   OSA_SETUP_OSA_SNIPPETS=false
   OSA_SETUP_DEPOT_TOOLS=false
+  OSA_SETUP_7ZIP=false
+  OSA_SETUP_DUTI=false
   
   # Enable homebrew on macOS
   if [[ "$OSA_IS_MACOS" == "true" ]]; then
@@ -1770,6 +1800,17 @@ HOOK_EOF
   echo "  • Guide you to use OSA's secure credential storage instead"
 }
 
+# Initialize Xcode after installation
+xcode_init() {
+  if [[ ! -f "$OSA_CLI_DIR/src/setup/xcode-init.zsh" ]]; then
+    echo -e "${COLOR_RED}✗${COLOR_RESET} xcode-init.zsh not found"
+    return 1
+  fi
+  
+  source "$OSA_CLI_DIR/src/setup/xcode-init.zsh"
+  return $?
+}
+
 # Main CLI logic
 main() {
   init_components
@@ -1840,7 +1881,7 @@ main() {
         shift
         ;;
       # Primary actions (first one wins) - Note: --config is special, it can take optional arg
-      -i|--interactive|-a|--auto|-l|--list|--list-configs|--info|--scan-secrets|--migrate-secrets|--setup-git-hook|--clean-symlinks|--clean-oh-my-zsh|--minimal|--all|--report|--report-json|--report-url)
+      -i|--interactive|-a|--auto|-l|--list|--list-configs|--info|--scan-secrets|--migrate-secrets|--setup-git-hook|--clean-symlinks|--clean-oh-my-zsh|--minimal|--all|--report|--report-json|--report-url|--xcode-init)
         if [[ -z "$primary_action" ]]; then
           primary_action="$1"
         fi
@@ -2026,6 +2067,14 @@ main() {
       detect_platform
       generate_system_report "url"
       exit 0
+      ;;
+    --xcode-init)
+      if [[ "$OSA_IS_MACOS" != "true" ]]; then
+        echo -e "${COLOR_YELLOW}⚠${COLOR_RESET} --xcode-init is only available on macOS"
+        exit 0
+      fi
+      xcode_init
+      exit $?
       ;;
     *)
       echo -e "${COLOR_RED}✗${COLOR_RESET} Unknown action: $primary_action"

@@ -67,5 +67,27 @@ snippets:
   osasnippets:
     enabled: true
     features:
+      - keychain
+      - mac_tools
       - direnv
       - vscode
+
+duti:
+  # Archive handlers - Keka for fast extraction
+  .zip: com.aone.keka
+  # Code/text editors - VSCode
+  .zsh: com.microsoft.VSCode
+  .sh: com.microsoft.VSCode
+  .js: com.microsoft.VSCode
+  .jsx: com.microsoft.VSCode
+  .ts: com.microsoft.VSCode
+  .tsx: com.microsoft.VSCode
+  .json: com.microsoft.VSCode
+  .json5: com.microsoft.VSCode
+  .md: com.microsoft.VSCode
+  .txt: com.microsoft.VSCode
+  .py: com.microsoft.VSCode
+  .rb: com.microsoft.VSCode
+  .yml: com.microsoft.VSCode
+  .yaml: com.microsoft.VSCode
+  .svg: com.microsoft.VSCode

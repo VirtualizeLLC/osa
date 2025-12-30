@@ -67,3 +67,10 @@ snippets:
   osasnippets:
     enabled: true
     features: []
+
+# macOS duti configuration: customize default apps for file types
+# Example entries - uncomment and customize as needed:
+duti:
+  # .zip: com.aone.keka  # Use Keka for ZIP files
+  # .md: com.microsoft.VSCode  # Use VSCode for Markdown
+  # Uncomment and add your custom overrides

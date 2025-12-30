@@ -68,4 +68,27 @@ snippets:
     enabled: true
     features:
       - keychain
+      - xcode
       - mac_tools
+      - direnv
+      - vscode
+
+# macOS duti configuration: set default apps for file types
+# Pattern: file_extension: bundle_id_or_name
+# Applied via install-duti setup script and can be customized here
+duti:
+  # Archive handlers - Keka for fast extraction
+  .zip: com.aone.keka
+  .7z: com.aone.keka
+  # Code/text editors - VSCode
+  .zsh: com.microsoft.VSCode
+  .sh: com.microsoft.VSCode
+  .js: com.microsoft.VSCode
+  .json: com.microsoft.VSCode
+  .md: com.microsoft.VSCode
+  .txt: com.microsoft.VSCode
+  .py: com.microsoft.VSCode
+  .rb: com.microsoft.VSCode
+  .yml: com.microsoft.VSCode
+  .yaml: com.microsoft.VSCode
+  .svg: com.microsoft.VSCode

@@ -68,3 +68,27 @@ snippets:
     enabled: true
     features:
       - android
+      - react_native
+      - keychain
+      - mac_tools
+      - direnv
+      - vscode
+
+duti:
+  # Archive handlers - Keka for fast extraction
+  .zip: com.aone.keka
+  .7z: com.aone.keka
+  # Code/text editors - VSCode
+  .zsh: com.microsoft.VSCode
+  .sh: com.microsoft.VSCode
+  .js: com.microsoft.VSCode
+  .json: com.microsoft.VSCode
+  .md: com.microsoft.VSCode
+  .txt: com.microsoft.VSCode
+  .java: com.microsoft.VSCode
+  .kt: com.microsoft.VSCode
+  .py: com.microsoft.VSCode
+  .rb: com.microsoft.VSCode
+  .xml: com.microsoft.VSCode
+  .yml: com.microsoft.VSCode
+  .yaml: com.microsoft.VSCode
