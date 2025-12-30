@@ -25,3 +25,19 @@ jobs:
         run: |
           echo "Running OSA Snippets test suite..."
           bats tests/*.bats
+
+  success:
+    name: success
+    needs: test
+    runs-on: macos-latest
+    if: always()
+    steps:
+      - name: Decide whether the needed jobs succeeded or failed
+        run: |
+          if [[ ${{ needs.test.result }} == "success" ]]; then
+            echo "✓ All required checks passed"
+            exit 0
+          else
+            echo "✗ Some required checks failed"
+            exit 1
+          fi
