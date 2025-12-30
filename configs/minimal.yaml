@@ -67,3 +67,9 @@ snippets:
   osasnippets:
     enabled: true
     features: []
+
+duti:
+  # Minimal duti configuration - just archives and core files
+  .zip: com.aone.keka
+  .txt: com.microsoft.VSCode
+  .md: com.microsoft.VSCode
