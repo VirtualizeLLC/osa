@@ -72,6 +72,7 @@ snippets:
       - mac_tools
       - direnv
       - vscode
+      - filelimits
 
 # macOS duti configuration: set default apps for file types
 # Pattern: file_extension: bundle_id_or_name
